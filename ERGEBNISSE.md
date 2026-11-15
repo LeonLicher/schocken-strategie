@@ -33,6 +33,31 @@ Finale, Mitte leer, Startspieler mit x Deckeln (Gegner 13 − x): Verlustwahrsch
 - Je mehr Deckel man selbst hat, desto öfter geht man bis zum verdeckten dritten Wurf
   (12 Deckel gegen 1: 69 %).
 
+### Wann sich Abweichen lohnt (Abweichungsanalyse)
+
+Verglichen wird die optimale Entscheidung in jedem Spielstand mit der Entscheidung, die in der neutralen
+Lage (Spielbeginn, 0:0) richtig ist. Alle Situationen mit Regeln: [ergebnisse/abweichungen.md](ergebnisse/abweichungen.md)
+(`python werkzeuge/abweichungen.py`). Einzelne Situation nachschlagen: `python werkzeuge/situation.py --help`.
+
+Wer den Spielstand beachtet, verliert rund **3,7 Prozentpunkte** seltener als jemand, der immer wie
+zu Spielbeginn spielt. Die wichtigsten Muster:
+
+1. **Startspieler, 2. Wurf, eine Eins plus zwei schwache Würfel** (z. B. 4-2-1, 5-3-1):
+   Zu Spielbeginn aufhören. Sobald man selbst 2 oder mehr Deckel hat oder die Mitte leer ist:
+   **die Eins halten und den Rest verdeckt nachwerfen.** Größte Einzelwirkung (zusammen 1,4 %-Pkt./Spiel).
+2. **Schock 5 oder Schock 6 bei leerer Mitte: sofort aufhören**, statt auf Schock Aus zu gehen.
+   Mit voller Mitte hält man dagegen die beiden Einsen und wirft weiter.
+3. **Folgespieler gegen verdeckten Gegner (sichtbar eine Eins):** Mit 6-1-1 oder 5-1-1 offen
+   aufhören, sobald der Gegner 2 oder mehr Deckel hat. Zu Spielbeginn würde man blind weiterwerfen.
+4. **Startspieler, 1. Wurf, schwacher Wurf ohne Eins** (3-2-2, 3-3-2, 4-2-2): zu Spielbeginn fertig;
+   wenn die Mitte (fast) leer ist und man selbst Deckel hat, besser alle drei neu werfen.
+5. **Startspieler, 1. Wurf, 3-2-1:** normalerweise die Eins halten; hat der Gegner 5 bis 6 Deckel
+   (oder 7+ und ich wenige), sofort aufhören.
+
+Beispiel (Finale, eigener Start, Mitte leer, 7 : 6, nach Wurf 2 ohne Eins): **aufhören** ist bei jedem
+Wurf richtig, genau wie zu Spielbeginn. Hat man dort aber eine Eins (z. B. 5-4-1), sollte man die Eins
+halten und verdeckt nachwerfen (bis 2,5 %-Pkt. besser); mit 5-1-1 aufhören (5,2 %-Pkt. besser).
+
 ## Drei Spieler: beste Faustregel (Simulation)
 
 Suche über 1152 einfache Parameter-Strategien gegen zwei Faustregel-Spieler (je 50.000 Spiele,

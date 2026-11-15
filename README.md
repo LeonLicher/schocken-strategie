@@ -32,6 +32,9 @@ python -m unittest discover -s tests -t .
 - `werkzeuge/loese2.py`: Löst das Spiel zu zweit (43 s) und speichert `ergebnisse/loesung2.pkl`.
 - `werkzeuge/pruefe_optimal2.py`: Prüft die Lösung per Simulation.
 - `werkzeuge/analyse2.py`: Zeigt, was die optimale Strategie tut.
+- `werkzeuge/situation.py`: Beste Entscheidung in einer beliebigen Situation nachschlagen (`--help`).
+- `werkzeuge/abweichungen.py`: Findet alle Situationen, in denen der Spielstand eine andere Entscheidung
+  verlangt, und lernt dazu Regeln → `ergebnisse/abweichungen.md`.
 
 Abhängigkeiten für Simulator und Lösung: `pip install numpy numba`.
 
