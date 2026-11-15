@@ -34,6 +34,9 @@
 ## Deckel
 - Zuerst aus der Mitte. Ist die Mitte leer, gibt der Gewinner der Runde.
 - Ist die Mitte leer, scheiden Spieler ohne Deckel für den Rest der Hälfte aus.
+- Annahme: Reicht die Mitte nicht (z. B. 2 übrig, 3 fällig), kommt der Rest vom Gewinner
+  (`Regeln.rest_vom_gewinner` in `schocken/engine.py`).
+- Annahme: Hälfte 2 beginnt der Verlierer von Hälfte 1, das Finale der Verlierer von Hälfte 2.
 
 ## Ziel der Umsetzung
 - Terminal-Spiel, lokal; Mensch und Computer mischbar.
