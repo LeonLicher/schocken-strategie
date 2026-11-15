@@ -27,7 +27,17 @@ python -m unittest discover -s tests -t .
 - `werkzeuge/vergleich.py`: Prüft den Simulator statistisch gegen die Engine.
 - `werkzeuge/parametersuche.py`: Sucht die beste Parameter-Strategie gegen ein Faustregel-Feld.
 
+- `schocken/loeser.py`: Exakte Lösung (Zug-Löser, Runde zu zweit, Wertiteration über alle Deckelstände).
+- `schocken/optimal.py`: `Optimal2`, spielt zu zweit exakt optimal.
+- `werkzeuge/loese2.py`: Löst das Spiel zu zweit (43 s) und speichert `ergebnisse/loesung2.pkl`.
+- `werkzeuge/pruefe_optimal2.py`: Prüft die Lösung per Simulation.
+- `werkzeuge/analyse2.py`: Zeigt, was die optimale Strategie tut.
+
 Abhängigkeiten für Simulator und Lösung: `pip install numpy numba`.
+
+Gegen den optimalen Bot spielen (zu zweit): `python -m schocken --spieler mensch,optimal`
+
+Erkenntnisse: [ERGEBNISSE.md](ERGEBNISSE.md).
 
 Eigene Strategie: von `engine.Strategie` erben und `entscheide(sicht) -> Aktion` implementieren.
 
@@ -36,5 +46,5 @@ Eigene Strategie: von `engine.Strategie` erben und `entscheide(sicht) -> Aktion`
 1. Engine und Tests (fertig)
 2. Terminal-Spiel (fertig, Grundversion)
 3. Schneller Simulator und Benchmark der Bots (fertig)
-4. Exakte Lösung: beste Entscheidung pro Situation (Rückwärtsrechnung)
+4. Exakte Lösung: beste Entscheidung pro Situation (Rückwärtsrechnung) – zu zweit fertig, ab 3 Spielern offen
 5. Auswertung und Spickzettel

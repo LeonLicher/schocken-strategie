@@ -82,7 +82,8 @@ class Sicht:
     nach_mir: int  # Anzahl Spieler, die nach mir noch würfeln
     deckel: tuple  # (spieler, deckel) für alle Teilnehmer der Hälfte
     mitte: int
-    haelfte: str
+    haelfte: str  # "Hälfte 1", "Hälfte 2" oder "Finale"
+    haelften_verlierer: tuple = ()  # Verlierer der bisherigen Hälften dieses Spiels
 
     @property
     def aus_der_hand(self) -> bool:
@@ -230,6 +231,7 @@ class Haelfte:
     name: str = "Hälfte"
     regeln: Regeln = field(default_factory=Regeln)
     log: object = None
+    haelften_verlierer: tuple = ()
     deckel: dict = field(init=False)
     mitte: int = field(init=False, default=DECKEL_GESAMT)
     runden: int = field(init=False, default=0)
@@ -256,7 +258,8 @@ class Haelfte:
 
     def spiele_runde(self):
         """Eine Runde. Gibt den Verlierer der Hälfte zurück, falls sie damit endet, sonst None."""
-        kontext = dict(deckel=tuple(self.deckel.items()), mitte=self.mitte, haelfte=self.name)
+        kontext = dict(deckel=tuple(self.deckel.items()), mitte=self.mitte, haelfte=self.name,
+                       haelften_verlierer=self.haelften_verlierer)
         r = spiele_runde(self.reihenfolge(), self.strategien, kontext, self.rng)
         self.runden += 1
         hoch, tief = r.hoch.spieler, r.tief.spieler
@@ -300,8 +303,8 @@ def spiele_spiel(strategien: list, rng=None, regeln=None, log=None, starter=None
     alle = list(strat)
     starter = rng.randrange(len(alle)) if starter is None else starter
 
-    def haelfte(teilnehmer, start, name):
-        h = Haelfte(teilnehmer, start, strat, rng, name, regeln, log)
+    def haelfte(teilnehmer, start, name, bisher=()):
+        h = Haelfte(teilnehmer, start, strat, rng, name, regeln, log, tuple(bisher))
         if log:
             log.haelfte_start(h)
         v = h.spiele()
@@ -310,8 +313,8 @@ def spiele_spiel(strategien: list, rng=None, regeln=None, log=None, starter=None
         return v, h.runden
 
     v1, r1 = haelfte(alle, starter, "Hälfte 1")
-    v2, r2 = haelfte(alle, v1, "Hälfte 2")
+    v2, r2 = haelfte(alle, v1, "Hälfte 2", [v1])
     if v1 == v2:
         return SpielErgebnis(v1, [v1, v2], r1 + r2)
-    vf, rf = haelfte(sorted([v1, v2]), v2, "Finale")
+    vf, rf = haelfte(sorted([v1, v2]), v2, "Finale", [v1, v2])
     return SpielErgebnis(vf, [v1, v2, vf], r1 + r2 + rf)

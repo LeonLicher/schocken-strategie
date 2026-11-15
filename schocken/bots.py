@@ -90,4 +90,7 @@ def aus_namen(name: str) -> Strategie:
         return Zufall()
     if name in ("faustregel", "bot", "computer", "cpu"):
         return Faustregel()
+    if name in ("optimal", "optimal2"):
+        from .optimal import Optimal2
+        return Optimal2()
     raise ValueError(f"Unbekannte Strategie: {name}")
