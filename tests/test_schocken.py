@@ -232,7 +232,7 @@ class TestHaelfte(unittest.TestCase):
         h.mitte, h.deckel = 0, {0: 3, 1: 8, 2: 2}
         self.spiele(h, runde(1, 2, (5, 5, 5)))  # Spieler 2 verliert, bekommt 3 von Spieler 1
         self.assertEqual(h.deckel, {0: 3, 1: 5, 2: 5})
-        self.assertEqual(h.starter, 2)  # Gleichstand 5:5 -> Verlierer beginnt
+        self.assertIn(h.starter, (1, 2))  # Gleichstand 5:5 -> Zufall
 
     def test_mitte_wird_leer_meiste_beginnt(self):
         h = self.haelfte()
@@ -240,19 +240,15 @@ class TestHaelfte(unittest.TestCase):
         self.spiele(h, runde(0, 2, (1, 1, 4)))  # Spieler 2 bekommt die letzten 2 aus der Mitte
         self.assertEqual((h.mitte, h.starter), (0, 0))
 
-    def test_gleichstand_ab_verlierer_im_uhrzeigersinn(self):
-        h = self.haelfte()
-        h.mitte, h.deckel = 0, {0: 5, 1: 7, 2: 1}
-        self.spiele(h, runde(1, 2, (1, 1, 2)))  # 1 gibt 2 an 2 -> 5:5:3, Gleichstand 0/1
-        self.assertEqual(h.deckel, {0: 5, 1: 5, 2: 3})
-        self.assertEqual(h.starter, 0)  # ab Verlierer 2 im Uhrzeigersinn: 0 vor 1
-
-    def test_gleichstand_verlierer_nicht_dabei(self):
-        h = self.haelfte()
-        h.mitte, h.deckel = 0, {0: 7, 1: 1, 2: 5}
-        self.spiele(h, runde(0, 1, (1, 1, 2)))  # 0 gibt 2 an 1 -> 5:3:5, Verlierer 1 -> nächster mit 5 ist 2
-        self.assertEqual(h.deckel, {0: 5, 1: 3, 2: 5})
-        self.assertEqual(h.starter, 2)
+    def test_gleichstand_zufaellig_unter_den_meisten(self):
+        gesehen = set()
+        for seed in range(40):
+            h = Haelfte(list(range(3)), 0, {}, random.Random(seed))
+            h.mitte, h.deckel = 0, {0: 7, 1: 1, 2: 5}
+            self.spiele(h, runde(0, 1, (1, 1, 2)))  # 0 gibt 2 an 1 -> 5:3:5
+            self.assertEqual(h.deckel, {0: 5, 1: 3, 2: 5})
+            gesehen.add(h.starter)
+        self.assertEqual(gesehen, {0, 2})  # beide Gleichstände kommen vor, der Verlierer 1 nie
 
     def test_haelfte_endet_bei_13(self):
         h = self.haelfte(2)

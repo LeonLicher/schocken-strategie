@@ -159,15 +159,21 @@ def _haelfte(params, teilnehmer, starter, RANG, KLASSE, DECKEL):
             return teilnehmer[tief_platz]
         start_platz = tief_platz
         if mitte == 0:
-            # Mitte leer: der Spieler mit den meisten Deckeln beginnt (Gleichstand: ab Verlierer im Uhrzeigersinn)
+            # Mitte leer: der Spieler mit den meisten Deckeln beginnt (Gleichstand: Zufall)
             meiste = 0
             for j in range(n):
                 meiste = max(meiste, deckel[j])
+            anzahl = 0
             for j in range(n):
-                platz = (tief_platz + j) % n
-                if deckel[platz] == meiste:
-                    start_platz = platz
-                    break
+                if deckel[j] == meiste:
+                    anzahl += 1
+            wahl_nr = np.random.randint(0, anzahl)
+            for j in range(n):
+                if deckel[j] == meiste:
+                    if wahl_nr == 0:
+                        start_platz = j
+                        break
+                    wahl_nr -= 1
 
 
 @njit(cache=True)

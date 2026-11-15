@@ -1,15 +1,31 @@
 # Schocken
 
-Schocken im Terminal und eine Grundlage, um die optimale Strategie zu berechnen. Die Regeln stehen in [REGELN.md](REGELN.md).
+Schocken zum Spielen (Browser oder Terminal) und zum Berechnen der besten Strategie. Die Regeln stehen in
+[REGELN.md](REGELN.md), die Erkenntnisse in [ERGEBNISSE.md](ERGEBNISSE.md).
 
-## Spielen
+## Spielen im Browser
 
 ```
-python -m schocken --spieler mensch,faustregel,faustregel
-python -m schocken --spieler faustregel,zufall,faustregel --seed 3
+python -m schocken.web
 ```
 
-Strategien: `mensch`, `faustregel`, `zufall`. Mit `--seed` lässt sich ein Spiel wiederholen.
+Öffnet http://localhost:8765. Würfel anklicken = liegen lassen; Knöpfe für Würfeln, Verdeckt würfeln, Fertig
+und Sechsen drehen. Die Züge der Gegner laufen Wurf für Wurf ab (Tempo einstellbar). Mit **Tipps** siehst du
+nach jeder Entscheidung, was am besten gewesen wäre, und am Ende deine teuersten Fehler.
+
+Gegner:
+- **Stammtisch**: wie am Tisch üblich (Startspieler hört mit einer Eins nach dem 2. Wurf auf, die anderen jagen den Schock).
+- **Konter**: exakt berechnete beste Antwort auf Stammtisch-Spieler (2 und 3 Spieler).
+- **Optimal**: perfektes Spiel, wenn alle perfekt spielen (nur zu zweit).
+- **Faustregel**: einfacher Bot.
+
+## Spielen im Terminal
+
+```
+python -m schocken --spieler mensch,stammtisch,konter
+```
+
+Strategien: `mensch`, `stammtisch`, `konter`, `optimal`, `faustregel`, `zufall`. Mit `--seed` lässt sich ein Spiel wiederholen.
 
 ## Tests
 
@@ -20,36 +36,24 @@ python -m unittest discover -s tests -t .
 ## Aufbau
 
 - `schocken/wertung.py`: Bewertung eines Wurfs (Rang und Deckel).
-- `schocken/engine.py`: Zug, Runde, Hälfte und Spiel; erlaubte Aktionen; `Sicht` = was ein Spieler weiß.
-- `schocken/bots.py`: Vergleichs-Strategien (`Zufall`, `Faustregel`).
-- `schocken/cli.py`: Terminal-Spiel.
-- `schocken/schnell.py`: Schneller Simulator (Numba, alle Kerne, ~275.000 Spiele/s) für Parameter-Strategien.
-- `werkzeuge/vergleich.py`: Prüft den Simulator statistisch gegen die Engine.
-- `werkzeuge/parametersuche.py`: Sucht die beste Parameter-Strategie gegen ein Faustregel-Feld.
-
-- `schocken/loeser.py`: Exakte Lösung (Zug-Löser, Runde zu zweit, Wertiteration über alle Deckelstände).
+- `schocken/engine.py`: Zug, Runde, Hälfte und Spiel; erlaubte Aktionen; `Sicht` = was ein Spieler weiß;
+  optionaler Beobachter für jeden Wurf und jede Entscheidung.
+- `schocken/bots.py`: `Stammtisch`, `Faustregel`, `Zufall`, Parameter-Strategien.
+- `schocken/cli.py`: Terminal-Spiel. `schocken/web/`: Browser-Spiel (lokaler Server, nur Python-Standardbibliothek).
+- `schocken/schnell.py`: Schneller Simulator (Numba, ~275.000 Spiele/s) für Parameter-Strategien.
+- `schocken/loeser.py`: Exakte Lösung zu zweit (Zug-Löser, Runde, Wertiteration über alle Deckelstände).
 - `schocken/optimal.py`: `Optimal2`, spielt zu zweit exakt optimal.
-- `werkzeuge/loese2.py`: Löst das Spiel zu zweit (43 s) und speichert `ergebnisse/loesung2.pkl`.
-- `werkzeuge/pruefe_optimal2.py`: Prüft die Lösung per Simulation.
-- `werkzeuge/analyse2.py`: Zeigt, was die optimale Strategie tut.
-- `werkzeuge/situation.py`: Beste Entscheidung in einer beliebigen Situation nachschlagen (`--help`).
-- `werkzeuge/abweichungen.py`: Findet alle Situationen, in denen der Spielstand eine andere Entscheidung
-  verlangt, und lernt dazu Regeln → `ergebnisse/abweichungen.md`.
-- `werkzeuge/abweichungen_seite.py`: Erzeugt die lesbare Fassung mit Spielstand-Karten →
-  `ergebnisse/abweichungen.html` (im Browser öffnen; Vorlage: `werkzeuge/abweichungen_vorlage.html`).
+- `schocken/konter.py`: Konter, die beste Antwort auf Stammtisch-Gegner (2 und 3 Spieler).
+- `schocken/analyse.py`: Abfragen und Abweichungsanalyse der 2-Spieler-Lösung.
 
-Abhängigkeiten für Simulator und Lösung: `pip install numpy numba`.
+Werkzeuge (`werkzeuge/`):
+- `loese2.py`: löst das Spiel zu zweit (~45 s) → `ergebnisse/loesung2.pkl`.
+- `loese_konter.py --spieler 2|3`: löst Konter (2 Kerne, niedrige Priorität) → `ergebnisse/konter2.pkl`, `konter3.pkl`.
+- `pruefe_optimal2.py`, `pruefe_konter.py`, `vergleich.py`: prüfen Lösungen und Simulator per Simulation.
+- `situation.py`: beste Entscheidung in einer beliebigen Situation nachschlagen (`--help`).
+- `abweichungen.py`, `abweichungen_seite.py`: Abweichungsanalyse → `ergebnisse/abweichungen.md` / `.html`.
+- `analyse2.py`, `parametersuche.py`: weitere Auswertungen.
 
-Gegen den optimalen Bot spielen (zu zweit): `python -m schocken --spieler mensch,optimal`
-
-Erkenntnisse: [ERGEBNISSE.md](ERGEBNISSE.md).
+Abhängigkeiten für Simulator und Lösungen: `pip install numpy numba scikit-learn`.
 
 Eigene Strategie: von `engine.Strategie` erben und `entscheide(sicht) -> Aktion` implementieren.
-
-## Fahrplan
-
-1. Engine und Tests (fertig)
-2. Terminal-Spiel (fertig, Grundversion)
-3. Schneller Simulator und Benchmark der Bots (fertig)
-4. Exakte Lösung: beste Entscheidung pro Situation (Rückwärtsrechnung) – zu zweit fertig, ab 3 Spielern offen
-5. Auswertung und Spickzettel

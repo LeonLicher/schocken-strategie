@@ -3,6 +3,7 @@
 import random
 
 from .engine import STOPP, Aktion, Sicht, Strategie, legale_aktionen
+from .wertung import STRASSE, bewerte
 
 # Parameter-Indizes, identisch mit schocken/schnell.py
 STARTER_KLASSE, VERDECKT_WURF, FOLGER_KLASSE, FOLGER_MARGE, DREHEN = range(5)
@@ -84,12 +85,54 @@ class Faustregel(ParameterStrategie):
         super().__init__(FAUSTREGEL_PARAMS)
 
 
+def stammtisch_entscheidung(wurf_nr, wuerfel, neu, grenze, ist_starter):
+    """Typische Stammtisch-Spielweise. Rückgabe: None = aufhören, sonst (behalten, gedrehte Einsen).
+
+    - Sonderwurf (Straße aus der Hand, General, Schock, Schock Aus): stehen lassen.
+    - Startspieler: ab dem 2. Wurf mit einer Eins aufhören; ohne Eins alle drei neu.
+    - Alle anderen versuchen einen Schock zu bekommen: Einsen halten, Rest neu, bis der Schock da ist
+      oder die Würfe aufgebraucht sind. Was die anderen haben, wird nicht beachtet.
+    - Sechsen werden gedreht, wenn erlaubt und weniger als zwei Einsen liegen. Verdeckt wird nie.
+    """
+    if bewerte(wuerfel, len(neu) == 3).klasse >= STRASSE:
+        return None
+    einsen = min(list(wuerfel).count(1), 2)
+    if ist_starter and wurf_nr >= 2 and einsen >= 1:
+        return None
+    rest = grenze - wurf_nr
+    sechsen = list(neu).count(6)
+    if einsen == 0 and sechsen >= 3 and rest >= 2:
+        return (), 2
+    if einsen < 2 and sechsen >= 2:
+        return (1,) * einsen, 1
+    return (1,) * einsen, 0
+
+
+class Stammtisch(Strategie):
+    """Spielt wie am Stammtisch üblich (siehe stammtisch_entscheidung)."""
+
+    name = "Stammtisch"
+
+    def entscheide(self, sicht: Sicht) -> Aktion:
+        if sicht.phase == "vor_wurf":
+            return Aktion()
+        e = stammtisch_entscheidung(sicht.wurf_nr, sicht.wuerfel, sicht.neu, sicht.grenze, sicht.ist_starter)
+        if e is None:
+            return STOPP
+        return Aktion(behalten=e[0], drehen=e[1])
+
+
 def aus_namen(name: str) -> Strategie:
     name = name.strip().lower()
     if name in ("zufall", "random"):
         return Zufall()
     if name in ("faustregel", "bot", "computer", "cpu"):
         return Faustregel()
+    if name == "stammtisch":
+        return Stammtisch()
+    if name == "konter":
+        from .konter import Konter
+        return Konter()
     if name in ("optimal", "optimal2"):
         from .optimal import Optimal2
         return Optimal2()

@@ -8,8 +8,8 @@
 
 ## Ablauf einer Runde
 - Startspieler = Verlierer der letzten Runde (Spielstart: auswürfeln).
-- **Ist die Mitte leer, beginnt der Spieler mit den meisten Deckeln.** Annahme bei Gleichstand (erst ab
-  3 Spielern möglich): der Verlierer der letzten Runde, falls er dabei ist, sonst der Nächste im Uhrzeigersinn ab ihm. Annahme: Die neue Hälfte beginnt der Verlierer der vorigen Hälfte.
+- **Ist die Mitte leer, beginnt der Spieler mit den meisten Deckeln.** Bei Gleichstand (erst ab 3 Spielern
+  möglich) beginnt in der Simulation ein zufälliger der Gleichstände (am Tisch: wer es zuerst merkt und sagt). Annahme: Die neue Hälfte beginnt der Verlierer der vorigen Hälfte.
 - Startspieler würfelt bis zu 3-mal. Seine Wurfzahl ist für alle anderen die Obergrenze (Annahme: weniger Würfe sind erlaubt).
 - Nach jedem Wurf darf man beliebige Würfel herauslegen. Herausgelegte Würfel dürfen **alle** wieder zurück in den Becher.
 - Sechsen drehen: 2 Sechsen aus einem Wurf → 1 Eins (der zweite Würfel geht zurück in den Becher), 3 Sechsen → 2 Einsen.

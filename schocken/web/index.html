@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Schocken am Tisch</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: Kopfleiste, Filz-Tisch mit Spielerkarten, darunter die eigene Aktionsleiste und das Rundenprotokoll. */
+:root {
+  --bg: #eef1ef; --surface: #ffffff; --fg: #16201b; --muted: #5b6963; --line: #d4dcd8;
+  --filz: #1e5843; --filz-2: #246a51; --filz-fg: #eaf4ee; --filz-muted: #a9c8b9;
+  --accent: #c9851a; --accent-fg: #1a1205; --rot: #c0412c; --gruen: #2f8a58; --wuerfel: #fbfaf6; --pip: #16201b;
+  --font-head: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1311; --surface: #172019; --fg: #e5ece8; --muted: #95a59d; --line: #29342f;
+  --filz: #143c2e; --filz-2: #1a4a39; --filz-fg: #e5f1ea; --filz-muted: #8fb3a2;
+  --accent: #e2a23d; --rot: #e0624d; --gruen: #49b07a; --wuerfel: #f3f1ea; --pip: #16201b; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0e1311; --surface: #172019; --fg: #e5ece8; --muted: #95a59d; --line: #29342f;
+  --filz: #143c2e; --filz-2: #1a4a39; --filz-fg: #e5f1ea; --filz-muted: #8fb3a2;
+  --accent: #e2a23d; --rot: #e0624d; --gruen: #49b07a; --wuerfel: #f3f1ea; --pip: #16201b; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+.seite { max-width: 1100px; margin: 0 auto; padding: 16px max(16px, env(safe-area-inset-right, 0px)) 120px max(16px, env(safe-area-inset-left, 0px));
+  display: flex; flex-direction: column; gap: 16px; }
+h1, h2, h3 { font-family: var(--font-head); margin: 0; line-height: 1.2; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.15rem; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.leise { color: var(--muted); }
+.etikett { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--muted); }
+
+.kopf { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+.kopf-rechts { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.knopf { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+.knopf.haupt { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+.knopf.gross { padding: 12px 20px; font-size: 1.02rem; font-weight: 600; }
+.knopf:disabled { opacity: 0.45; cursor: not-allowed; }
+.segment { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.segment button { border: 0; background: var(--surface); color: var(--fg); padding: 6px 10px; font-size: 0.85rem; }
+.segment button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+label.schalter { display: inline-flex; gap: 6px; align-items: center; font-size: 0.9rem; }
+
+/* Einrichtung */
+.einrichtung { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.reihe { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.gegner-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.gegner-wahl { display: flex; flex-direction: column; gap: 4px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; }
+select { font: inherit; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+.erklaerung { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; font-size: 0.88rem; }
+.erklaerung div { padding: 10px; background: var(--bg); border-radius: 8px; }
+
+/* Tisch */
+.tisch { background: radial-gradient(ellipse at 50% 30%, var(--filz-2), var(--filz)); color: var(--filz-fg); border-radius: 16px; padding: 16px;
+  display: flex; flex-direction: column; gap: 14px; }
+.tisch-kopf { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.tisch-kopf .etikett { color: var(--filz-muted); }
+.mitte { display: flex; gap: 10px; align-items: center; }
+.stapel-deckel { display: flex; flex-wrap: wrap; gap: 3px; max-width: 220px; }
+.deckel { width: 14px; height: 14px; border-radius: 50%; background: #f1e3c2; border: 2px solid #b9884a; }
+.regelzeile { font-size: 0.9rem; color: var(--filz-muted); }
+.regelzeile b { color: var(--filz-fg); }
+.spieler-raster { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.spieler { background: rgba(0,0,0,0.18); border: 2px solid transparent; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.spieler.dran { border-color: var(--accent); background: rgba(0,0,0,0.28); }
+.spieler.raus { opacity: 0.45; }
+.spieler-kopf { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.spieler-name { font-family: var(--font-head); font-weight: 700; font-size: 1.05rem; }
+.zahl-deckel { font-family: var(--font-head); font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.marken { display: flex; gap: 5px; flex-wrap: wrap; }
+.marke { font-size: 0.72rem; padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,0.14); }
+.marke.hoch { background: var(--gruen); color: #fff; }
+.marke.tief { background: var(--rot); color: #fff; }
+.wuerfe { display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
+.wurf-zeile { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 0.82rem; }
+.wurf-nr { color: var(--filz-muted); width: 1.4em; }
+.wurf-text { color: var(--filz-muted); }
+.ergebnis { font-weight: 600; }
+.mini { display: inline-flex; gap: 3px; }
+
+/* eigene Aktion */
+.aktion { background: var(--surface); border: 2px solid var(--accent); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.aktion[hidden] { display: none !important; }
+.aktion-kopf { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; }
+.grosse-wuerfel { display: flex; gap: 14px; flex-wrap: wrap; }
+.wuerfel-knopf { border: 0; background: none; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--fg); }
+.wuerfel-knopf .unter { font-size: 0.75rem; color: var(--muted); min-height: 1.2em; }
+.wuerfel-knopf[aria-pressed="true"] svg { transform: translateY(-6px); filter: drop-shadow(0 4px 0 var(--accent)); }
+.wuerfel-knopf[aria-pressed="true"] .unter { color: var(--accent); font-weight: 600; }
+.wuerfel-knopf:disabled { cursor: default; }
+.knopf-reihe { display: flex; gap: 10px; flex-wrap: wrap; }
+.dreh-reihe { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 0.9rem; }
+.dreh-reihe button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.meldung { min-height: 1.4em; color: var(--rot); font-size: 0.9rem; }
+.tipp { padding: 10px 12px; border-radius: 8px; background: var(--bg); font-size: 0.9rem; }
+.tipp ol { margin: 6px 0 0; padding-left: 20px; }
+.rueckmeldung { padding: 10px 12px; border-radius: 8px; font-size: 0.92rem; border-left: 4px solid var(--gruen); background: var(--surface); border: 1px solid var(--line); border-left-width: 4px; }
+.rueckmeldung.teuer { border-left-color: var(--rot); }
+@media (prefers-reduced-motion: no-preference) { .wuerfel-knopf svg { transition: transform .12s ease; } }
+
+/* Protokoll */
+.protokoll { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.protokoll ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; max-height: 320px; overflow-y: auto; }
+.protokoll li.trenner { font-weight: 600; margin-top: 4px; }
+.ende { background: var(--surface); border: 2px solid var(--accent); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.ende table { border-collapse: collapse; font-size: 0.9rem; width: 100%; }
+.ende td, .ende th { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tabelle-box { overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="seite">
+  <header class="kopf">
+    <h1>Schocken am Tisch</h1>
+    <div class="kopf-rechts">
+      <span class="etikett">Tempo</span>
+      <div class="segment" id="tempo" role="group" aria-label="Tempo"></div>
+      <label class="schalter"><input type="checkbox" id="tipps-an"> Tipps</label>
+      <button class="knopf" id="neu-knopf" type="button">Neues Spiel</button>
+    </div>
+  </header>
+
+  <section class="einrichtung" id="einrichtung">
+    <h2>Neues Spiel</h2>
+    <div class="reihe"><span class="etikett">Spieler am Tisch (mit dir)</span><div class="segment" id="anzahl" role="group" aria-label="Anzahl Spieler"></div></div>
+    <div class="gegner-liste" id="gegner-liste"></div>
+    <div class="reihe">
+      <label class="schalter"><input type="checkbox" id="tipps-start" checked> Tipps einschalten</label>
+      <span class="leise">Berater:</span><select id="berater"></select>
+    </div>
+    <div class="erklaerung">
+      <div><b>Stammtisch</b>: wie am Tisch üblich. Startspieler hört mit einer Eins nach dem 2. Wurf auf, die anderen jagen den Schock.</div>
+      <div><b>Konter</b>: die exakt berechnete beste Antwort auf Stammtisch-Spieler (2 und 3 Spieler).</div>
+      <div><b>Optimal</b>: perfektes Spiel, wenn alle perfekt spielen (nur zu zweit).</div>
+      <div><b>Faustregel</b>: einfacher Bot, hört auf, sobald er nicht mehr Letzter ist.</div>
+    </div>
+    <div class="reihe"><button class="knopf haupt gross" id="start-knopf" type="button">Spiel starten</button><span class="meldung" id="start-meldung"></span></div>
+  </section>
+
+  <section class="tisch" id="tisch" hidden>
+    <div class="tisch-kopf">
+      <div><span class="etikett" id="phase">Hälfte 1</span><div class="regelzeile" id="regelzeile"></div></div>
+      <div class="mitte"><span class="etikett">Mitte</span><span class="zahl-deckel" id="mitte-zahl">13</span><div class="stapel-deckel" id="mitte-deckel"></div></div>
+    </div>
+    <div class="spieler-raster" id="spieler"></div>
+  </section>
+
+  <section class="aktion" id="aktion" hidden aria-live="polite">
+    <div class="aktion-kopf"><h2 id="aktion-titel">Du bist dran</h2><span class="leise" id="aktion-info"></span></div>
+    <div class="grosse-wuerfel" id="grosse-wuerfel"></div>
+    <div class="dreh-reihe" id="dreh-reihe"></div>
+    <div class="knopf-reihe" id="knopf-reihe"></div>
+    <div class="meldung" id="aktion-meldung"></div>
+    <div id="tipp-box"></div>
+  </section>
+
+  <div id="rueckmeldung"></div>
+  <section class="ende" id="ende" hidden></section>
+
+  <section class="protokoll" id="protokoll-box" hidden>
+    <h2>Protokoll</h2>
+    <ul id="protokoll"></ul>
+  </section>
+</div>
+
+<script>
+const BOT_NAMEN = { stammtisch: "Stammtisch", konter: "Konter", optimal: "Optimal", faustregel: "Faustregel" };
+const BERATER_NAMEN = { optimal: "Optimal (alle spielen perfekt)", konter: "Konter (Gegner spielen Stammtisch)" };
+const TEMPO = [["langsam", "Langsam", 1.6], ["normal", "Normal", 1], ["schnell", "Schnell", 0.4], ["sofort", "Sofort", 0]];
+const pct = x => (x * 100).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " %";
+
+function lies(k, std) { try { return localStorage.getItem(k) ?? std; } catch (e) { return std; } }
+function merke(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+let verfuegbar = {};
+let anzahl = Number(lies("anzahl", "3"));
+let gegnerTypen = JSON.parse(lies("gegner", '["konter","stammtisch","stammtisch","stammtisch","stammtisch"]'));
+let tempo = lies("tempo", "normal");
+let tippsAn = lies("tipps", "1") === "1";
+
+// ------------------------------------------------------------------ Würfel zeichnen
+function wuerfelSVG(v, groesse = 22, art = "") {
+  const r = groesse;
+  if (v === null || v === "?") {
+    return `<svg width="${r}" height="${r}" viewBox="0 0 30 30" aria-label="verdeckt"><rect x="1" y="1" width="28" height="28" rx="6" style="fill:#2b2b2b;stroke:#000;stroke-width:1.2"/>
+      <text x="15" y="21" text-anchor="middle" font-size="16" font-weight="700" style="fill:#d8d8d8">?</text></svg>`;
+  }
+  const p = { 1: [[2, 2]], 2: [[1, 1], [3, 3]], 3: [[1, 1], [2, 2], [3, 3]], 4: [[1, 1], [3, 1], [1, 3], [3, 3]],
+              5: [[1, 1], [3, 1], [2, 2], [1, 3], [3, 3]], 6: [[1, 1], [3, 1], [1, 2], [3, 2], [1, 3], [3, 3]] }[v];
+  const gehalten = art === "gehalten";
+  const pips = p.map(([x, y]) => `<circle cx="${x * 6 + 3}" cy="${y * 6 + 3}" r="${v === 1 ? 3 : 2.2}" style="fill:${v === 1 ? "#b3261e" : "var(--pip)"}"/>`).join("");
+  return `<svg width="${r}" height="${r}" viewBox="0 0 30 30" aria-label="${v}"><rect x="1" y="1" width="28" height="28" rx="6"
+    style="fill:var(--wuerfel);stroke:${gehalten ? "var(--accent)" : "#00000055"};stroke-width:${gehalten ? 3 : 1.2}"/>${pips}</svg>`;
+}
+const wuerfelReihe = (liste, groesse, art) => `<span class="mini">${liste.map(v => wuerfelSVG(v, groesse, art)).join("")}</span>`;
+
+// ------------------------------------------------------------------ Einrichtung
+function zeichneEinrichtung() {
+  const seg = document.getElementById("anzahl");
+  seg.innerHTML = "";
+  for (let n = 2; n <= 6; n++) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = n; b.setAttribute("aria-pressed", String(n === anzahl));
+    b.onclick = () => { anzahl = n; merke("anzahl", n); zeichneEinrichtung(); };
+    seg.appendChild(b);
+  }
+  const v = verfuegbar[String(anzahl)] || { bots: ["stammtisch"], berater: [] };
+  const liste = document.getElementById("gegner-liste");
+  liste.innerHTML = "";
+  for (let i = 0; i < anzahl - 1; i++) {
+    if (!v.bots.includes(gegnerTypen[i])) gegnerTypen[i] = "stammtisch";
+    const box = document.createElement("div");
+    box.className = "gegner-wahl";
+    const optionen = Object.keys(BOT_NAMEN).map(k => `<option value="${k}" ${k === gegnerTypen[i] ? "selected" : ""} ${v.bots.includes(k) ? "" : "disabled"}>${BOT_NAMEN[k]}${v.bots.includes(k) ? "" : " (nicht für " + anzahl + " Spieler)"}</option>`).join("");
+    box.innerHTML = `<label class="etikett" for="gegner-${i}">Platz ${i + 2} (nach dir)</label><select id="gegner-${i}">${optionen}</select>`;
+    box.querySelector("select").onchange = e => { gegnerTypen[i] = e.target.value; merke("gegner", JSON.stringify(gegnerTypen)); };
+    liste.appendChild(box);
+  }
+  const ber = document.getElementById("berater");
+  ber.innerHTML = v.berater.length ? v.berater.map(b => `<option value="${b}">${BERATER_NAMEN[b]}</option>`).join("")
+                                   : `<option value="">für ${anzahl} Spieler noch nicht berechnet</option>`;
+  ber.disabled = !v.berater.length;
+  if (v.berater.includes("konter") && gegnerTypen.slice(0, anzahl - 1).every(t => t === "stammtisch")) ber.value = "konter";
+}
+
+async function starte() {
+  const typen = ["mensch", ...gegnerTypen.slice(0, anzahl - 1)];
+  const tipps = document.getElementById("tipps-start").checked;
+  const r = await fetch("/api/start", { method: "POST", body: JSON.stringify({ spieler: typen, tipps, berater: document.getElementById("berater").value }) });
+  const d = await r.json();
+  if (!r.ok) { document.getElementById("start-meldung").textContent = d.fehler; return; }
+  tippsAn = tipps && !!d.berater;
+  document.getElementById("tipps-an").checked = tippsAn;
+  neuerZustand(d.namen, d.berater);
+  document.getElementById("einrichtung").hidden = true;
+  document.getElementById("tisch").hidden = false;
+  document.getElementById("protokoll-box").hidden = false;
+}
+
+// ------------------------------------------------------------------ Spielzustand aus Ereignissen
+let Z = null;
+function neuerZustand(namen, berater) {
+  Z = { namen, berater, n: namen.length, empfangen: [], gespielt: 0, offen: null, fertig: false,
+        spieler: namen.map(() => ({ deckel: 0, wuerfe: [], ergebnis: null, haelften: 0, marke: null })),
+        mitte: 13, phase: "", teilnehmer: [], reihe: [], grenze: 3, vm: false, amZug: null,
+        protokoll: [], fehler: [], ende: null, abgeschickt: false, auswahl: [], drehen: 0, tippOffen: false };
+  document.getElementById("ende").hidden = true;
+  document.getElementById("rueckmeldung").innerHTML = "";
+  zeichne();
+}
+
+function wende(e) {
+  const s = Z.spieler;
+  switch (e.typ) {
+    case "haelfte_start":
+      Z.phase = e.name; Z.teilnehmer = e.teilnehmer; Z.mitte = 13;
+      e.teilnehmer.forEach(i => { s[i].deckel = 0; });
+      Z.protokoll.unshift({ trenner: true, text: `${e.name} beginnt (${e.teilnehmer.map(i => Z.namen[i]).join(", ")})` });
+      break;
+    case "runde_start":
+      Z.reihe = e.reihenfolge; Z.grenze = 3; Z.vm = false; Z.amZug = null;
+      s.forEach(x => { x.wuerfe = []; x.ergebnis = null; x.marke = null; });
+      break;
+    case "wurf":
+      Z.amZug = e.spieler;
+      s[e.spieler].wuerfe.push({ nr: e.wurf_nr, gehalten: e.gehalten, neu: e.neu, verdeckt: e.verdeckt, text: "" });
+      break;
+    case "aktion": {
+      const w = s[e.spieler].wuerfe;
+      if (e.wurf_nr === 0) s[e.spieler].vorText = e.text;
+      else if (w.length) w[w.length - 1].text = e.text;
+      break;
+    }
+    case "zug_ende":
+      s[e.ergebnis.spieler].ergebnis = e.ergebnis;
+      if (e.ergebnis.spieler === Z.reihe[0]) { Z.grenze = e.ergebnis.wuerfe; Z.vm = e.ergebnis.verdeckt; }
+      break;
+    case "runde_ende": {
+      e.ergebnisse.forEach(r => { s[r.spieler].ergebnis = r; });
+      s[e.hoch].marke = "hoch"; s[e.tief].marke = "tief";
+      Object.entries(e.deckel).forEach(([i, d]) => { s[Number(i)].deckel = d; });
+      Z.mitte = e.mitte; Z.amZug = null;
+      const hochE = e.ergebnisse.find(r => r.spieler === e.hoch);
+      const tiefE = e.ergebnisse.find(r => r.spieler === e.tief);
+      const wer = e.tief === 0 ? "Du bekommst" : `${Z.namen[e.tief]} bekommt`;
+      Z.protokoll.unshift({ text: `Hoch: ${Z.namen[e.hoch]} (${hochE.wertung}), tief: ${Z.namen[e.tief]} (${tiefE.wertung}). ` +
+        (e.schock_aus ? `Schock Aus! ${wer} alle Deckel.` : `${wer} ${e.deckel_bewegt} Deckel.`) });
+      break;
+    }
+    case "haelfte_ende":
+      s[e.verlierer].haelften += 1;
+      Z.protokoll.unshift({ trenner: true, text: `${Z.namen[e.verlierer]} ${e.verlierer === 0 ? "verlierst" : "verliert"} ${e.name}.` });
+      break;
+    case "spiel_ende":
+      Z.ende = e; Z.fertig = true;
+      break;
+    case "fehler":
+      Z.fehler.push(e.text);
+      break;
+  }
+}
+
+function pause(e) {
+  const f = TEMPO.find(t => t[0] === tempo)[2];
+  if (f === 0) return 0;
+  const eigen = e.spieler === 0 || (e.ergebnis && e.ergebnis.spieler === 0);
+  const basis = { wurf: 650, aktion: 500, zug_ende: 250, runde_ende: 1600, runde_start: 250, haelfte_start: 900, haelfte_ende: 1400 }[e.typ] || 0;
+  return (eigen && e.typ !== "runde_ende" ? 120 : basis) * f;
+}
+
+let spielt = false;
+async function spieleAb() {
+  if (spielt) return;
+  spielt = true;
+  while (Z && Z.gespielt < Z.empfangen.length) {
+    const e = Z.empfangen[Z.gespielt];
+    wende(e);
+    Z.gespielt++;
+    zeichne();
+    const ms = pause(e);
+    if (ms) await new Promise(r => setTimeout(r, ms));
+  }
+  spielt = false;
+  zeichne();
+}
+
+async function abfrage() {
+  if (!Z) return;
+  try {
+    const r = await fetch(`/api/zustand?ab=${Z.empfangen.length}`);
+    const d = await r.json();
+    if (!d.aktiv) return;
+    Z.empfangen.push(...d.ereignisse);
+    if (!d.offen) Z.abgeschickt = false;
+    if (d.offen && (!Z.offen || Z.offen.nummer !== d.offen.nummer)) {
+      Z.offen = d.offen; Z.abgeschickt = false; Z.drehen = 0; Z.tippOffen = false;
+      const vorher = d.offen.wuerfel.length - d.offen.neu.length;
+      Z.auswahl = d.offen.wuerfel.map((_, i) => i < vorher);  // bisher liegende Würfel vorausgewählt
+    }
+    if (!d.offen) Z.offen = null;
+    spieleAb();
+  } catch (e) { /* Server kurz nicht erreichbar: beim nächsten Mal wieder */ }
+}
+setInterval(abfrage, 300);
+
+// ------------------------------------------------------------------ Zeichnen
+function zeichne() {
+  if (!Z) return;
+  document.getElementById("phase").textContent = Z.phase || "Gleich geht's los";
+  document.getElementById("mitte-zahl").textContent = Z.mitte;
+  document.getElementById("mitte-deckel").innerHTML = Array.from({ length: Z.mitte }, () => `<span class="deckel"></span>`).join("");
+  const starter = Z.reihe.length ? Z.namen[Z.reihe[0]] : "";
+  const starterFertig = Z.reihe.length && Z.spieler[Z.reihe[0]].ergebnis;
+  document.getElementById("regelzeile").innerHTML = Z.reihe.length
+    ? `Es beginnt <b>${starter}</b>. ` + (starterFertig ? `Höchstens <b>${Z.grenze}</b> ${Z.grenze === 1 ? "Wurf" : "Würfe"}${Z.vm ? ", der letzte <b>verdeckt</b>" : ""}.` : "Der Startspieler legt die Wurfzahl fest.")
+    : "";
+
+  const raster = document.getElementById("spieler");
+  raster.innerHTML = Z.namen.map((name, i) => {
+    const s = Z.spieler[i];
+    const imSpiel = Z.teilnehmer.includes(i);
+    const aktiv = Z.reihe.includes(i);
+    const marken = [];
+    if (Z.reihe[0] === i) marken.push(`<span class="marke">beginnt</span>`);
+    if (s.marke === "hoch") marken.push(`<span class="marke hoch">hoch</span>`);
+    if (s.marke === "tief") marken.push(`<span class="marke tief">tief</span>`);
+    if (s.haelften) marken.push(`<span class="marke">${s.haelften}× Hälfte verloren</span>`);
+    if (!imSpiel && Z.phase) marken.push(`<span class="marke">nicht im Finale</span>`);
+    else if (!aktiv && Z.reihe.length) marken.push(`<span class="marke">raus (keine Deckel)</span>`);
+    const wuerfe = s.wuerfe.map(w => `<div class="wurf-zeile"><span class="wurf-nr">${w.nr}.</span>
+        ${w.gehalten.length ? wuerfelReihe(w.gehalten, 20, "gehalten") : ""}${wuerfelReihe(w.verdeckt ? Array(3 - w.gehalten.length).fill(null) : w.neu, 20)}
+        <span class="wurf-text">${w.text}</span></div>`).join("");
+    let erg = "";
+    if (s.ergebnis) {
+      const e = s.ergebnis;
+      erg = e.wertung ? `<div class="ergebnis">${e.verdeckt && e.wuerfel ? wuerfelReihe([...e.wuerfel].sort((a, b) => b - a), 20) + " " : ""}${e.wertung} · ${e.wuerfe} ${e.wuerfe === 1 ? "Wurf" : "Würfe"}${e.verdeckt ? " · war verdeckt" : ""}</div>`
+                      : `<div class="ergebnis">verdeckt nach ${e.wuerfe} ${e.wuerfe === 1 ? "Wurf" : "Würfen"}</div>`;
+    }
+    return `<article class="spieler ${Z.amZug === i ? "dran" : ""} ${(!imSpiel && Z.phase) || (!aktiv && Z.reihe.length) ? "raus" : ""}">
+      <div class="spieler-kopf"><span class="spieler-name">${name}</span><span class="zahl-deckel" title="Deckel">${s.deckel}</span></div>
+      <div class="stapel-deckel">${Array.from({ length: s.deckel }, () => `<span class="deckel"></span>`).join("")}</div>
+      <div class="marken">${marken.join("")}</div>
+      <div class="wuerfe">${s.vorText && s.wuerfe.length && s.wuerfe[0].verdeckt ? `<div class="wurf-text">${s.vorText}</div>` : ""}${wuerfe}${erg}</div>
+    </article>`;
+  }).join("");
+
+  document.getElementById("protokoll").innerHTML = Z.protokoll.map(p => `<li class="${p.trenner ? "trenner" : ""}">${p.text}</li>`).join("");
+  zeichneAktion();
+  zeichneEnde();
+}
+
+function legalHat(pred) { return Z.offen.legal.some(pred); }
+function gleich(a, b, starter) {
+  if (a.stopp || b.stopp) return a.stopp === b.stopp;
+  const s = x => [...x].sort().join(",");
+  return s(a.behalten) === s(b.behalten) && a.drehen === b.drehen && (!starter || a.verdeckt === b.verdeckt);
+}
+
+function zeichneAktion() {
+  const box = document.getElementById("aktion");
+  const o = Z.offen;
+  const zeigen = o && !Z.abgeschickt && Z.gespielt >= o.nummer && !spielt;
+  box.hidden = !zeigen;
+  if (!zeigen) return;
+  const grosse = document.getElementById("grosse-wuerfel");
+  const drehReihe = document.getElementById("dreh-reihe");
+  const knoepfe = document.getElementById("knopf-reihe");
+  document.getElementById("aktion-meldung").textContent = "";
+  const titel = document.getElementById("aktion-titel");
+  const info = document.getElementById("aktion-info");
+
+  if (o.phase === "vor_wurf") {
+    titel.textContent = "Du beginnst die Runde";
+    info.textContent = "Du legst fest, wie oft alle würfeln dürfen. Verdeckt heißt: Niemand sieht den Wurf, auch du nicht.";
+    grosse.innerHTML = ""; drehReihe.innerHTML = "";
+    knoepfe.innerHTML = `<button class="knopf haupt gross" type="button" id="k-offen">Würfeln</button>
+      <button class="knopf gross" type="button" id="k-verdeckt">Verdeckt würfeln</button>`;
+    document.getElementById("k-offen").onclick = () => sende({ stopp: false, behalten: [], drehen: 0, verdeckt: false });
+    document.getElementById("k-verdeckt").onclick = () => sende({ stopp: false, behalten: [], drehen: 0, verdeckt: true });
+    zeichneTipp();
+    return;
+  }
+
+  const vorher = o.wuerfel.length - o.neu.length;
+  const rest = o.grenze - o.wurf_nr;
+  const erzwungen = !o.ist_starter && o.verdeckt_modus && o.wurf_nr + 1 === o.grenze;
+  titel.textContent = `Dein ${o.wurf_nr}. Wurf`;
+  info.textContent = o.ist_starter ? `Du beginnst: noch bis zu ${rest} ${rest === 1 ? "Wurf" : "Würfe"}.`
+                                   : `Noch ${rest} ${rest === 1 ? "Wurf" : "Würfe"} erlaubt${erzwungen ? ", der nächste muss verdeckt sein" : ""}. Nach dir: ${o.nach_mir}.`;
+
+  // Sechsen drehen: welche Würfel werden verbraucht?
+  const sechsenNeu = o.wuerfel.map((v, i) => i >= vorher && v === 6 ? i : -1).filter(i => i >= 0);
+  const verbraucht = Z.drehen ? sechsenNeu.slice(0, Z.drehen + 1) : [];
+  grosse.innerHTML = o.wuerfel.map((v, i) => {
+    const weg = verbraucht.includes(i);
+    const gedreht = weg && verbraucht.indexOf(i) < Z.drehen;
+    const an = !weg && Z.auswahl[i];
+    const unter = weg ? (gedreht ? "→ wird zur 1" : "zurück in den Becher") : (an ? "liegen lassen" : (i < vorher ? "lag schon" : "neu"));
+    return `<button class="wuerfel-knopf" type="button" data-i="${i}" aria-pressed="${an || gedreht}" ${weg ? "disabled" : ""}>
+      ${wuerfelSVG(gedreht ? 1 : v, 64, an || gedreht ? "gehalten" : "")}<span class="unter">${unter}</span></button>`;
+  }).join("");
+  grosse.querySelectorAll(".wuerfel-knopf").forEach(b => b.onclick = () => {
+    const i = Number(b.dataset.i); Z.auswahl[i] = !Z.auswahl[i]; zeichneAktion();
+  });
+
+  const drehOpt = [1, 2].filter(t => legalHat(a => a.drehen === t));
+  drehReihe.innerHTML = drehOpt.length ? `<span class="leise">Sechsen drehen:</span>` + drehOpt.map(t =>
+    `<button class="knopf" type="button" data-t="${t}" aria-pressed="${Z.drehen === t}">${t === 1 ? "6-6 → eine 1" : "6-6-6 → zwei 1en"}</button>`).join("") : "";
+  drehReihe.querySelectorAll("button").forEach(b => b.onclick = () => {
+    const t = Number(b.dataset.t); Z.drehen = Z.drehen === t ? 0 : t; zeichneAktion();
+  });
+
+  const weiter = rest > 0;
+  knoepfe.innerHTML = `<button class="knopf gross" type="button" id="k-fertig">Fertig (stehen lassen)</button>` +
+    (weiter ? `<button class="knopf haupt gross" type="button" id="k-weiter">${erzwungen ? "Würfeln (verdeckt, Pflicht)" : "Würfeln"}</button>` : "") +
+    (weiter && o.ist_starter ? `<button class="knopf gross" type="button" id="k-weiter-v">Verdeckt würfeln</button>` : "");
+  document.getElementById("k-fertig").onclick = () => sende({ stopp: true, behalten: [], drehen: 0, verdeckt: false });
+  const auswahl = verdeckt => {
+    const behalten = o.wuerfel.filter((v, i) => Z.auswahl[i] && !verbraucht.includes(i));
+    if (behalten.length + Z.drehen > 2) {
+      document.getElementById("aktion-meldung").textContent = "Mindestens ein Würfel muss neu geworfen werden. Lass höchstens zwei liegen.";
+      return;
+    }
+    sende({ stopp: false, behalten, drehen: Z.drehen, verdeckt });
+  };
+  if (weiter) document.getElementById("k-weiter").onclick = () => auswahl(erzwungen);
+  if (weiter && o.ist_starter) document.getElementById("k-weiter-v").onclick = () => auswahl(true);
+  zeichneTipp();
+}
+
+function zeichneTipp() {
+  const box = document.getElementById("tipp-box");
+  const o = Z.offen;
+  if (!tippsAn || !o.optionen) { box.innerHTML = o && o.optionen_fehler ? `<div class="tipp leise">Tipp nicht verfügbar.</div>` : ""; return; }
+  if (!Z.tippOffen) {
+    box.innerHTML = `<button class="knopf" type="button" id="k-tipp">Tipp zeigen</button>`;
+    document.getElementById("k-tipp").onclick = () => { Z.tippOffen = true; zeichneTipp(); };
+    return;
+  }
+  const beste = o.optionen[0].p;
+  box.innerHTML = `<div class="tipp"><b>Deine Chance zu verlieren je Möglichkeit</b> (${BERATER_NAMEN[Z.berater]}):<ol>` +
+    o.optionen.slice(0, 6).map(x => `<li>${x.text}: ${pct(x.p)}${x.p - beste > 0.0005 ? ` <span class="leise">(+${((x.p - beste) * 100).toFixed(1)} Pkt.)</span>` : " <b>beste</b>"}</li>`).join("") + "</ol></div>";
+}
+
+async function sende(aktion) {
+  const o = Z.offen;
+  const r = await fetch("/api/aktion", { method: "POST", body: JSON.stringify(aktion) });
+  const d = await r.json();
+  if (!r.ok) { document.getElementById("aktion-meldung").textContent = d.fehler; return; }
+  Z.abgeschickt = true;
+  if (tippsAn && o.optionen) {
+    const gewaehlt = o.optionen.find(x => gleich(x.aktion, aktion, o.ist_starter));
+    const beste = o.optionen[0];
+    if (gewaehlt) {
+      const kosten = gewaehlt.p - beste.p;
+      const situation = o.phase === "vor_wurf" ? "Vor dem 1. Wurf" : `Wurf ${o.wurf_nr}: ${[...o.wuerfel].sort((a, b) => b - a).join("-")}`;
+      Z.fehler_liste = Z.fehler_liste || [];
+      if (kosten > 0.0005) Z.fehler_liste.push({ situation, gewaehlt: gewaehlt.text, beste: beste.text, kosten, phase: Z.phase, stand: Z.spieler.map(s => s.deckel).join(":") });
+      document.getElementById("rueckmeldung").innerHTML = kosten > 0.0005
+        ? `<div class="rueckmeldung teuer">Besser wäre gewesen: <b>${beste.text}</b>. Deine Wahl (${gewaehlt.text}) kostet ${(kosten * 100).toFixed(1)} Prozentpunkte Verlustchance (${pct(gewaehlt.p)} statt ${pct(beste.p)}).</div>`
+        : `<div class="rueckmeldung">Gute Wahl: ${gewaehlt.text}. Deine Chance zu verlieren: ${pct(gewaehlt.p)}.</div>`;
+    }
+  }
+  zeichne();
+}
+
+function zeichneEnde() {
+  const box = document.getElementById("ende");
+  if (!Z.ende || spielt || Z.gespielt < Z.empfangen.length) { box.hidden = true; return; }
+  box.hidden = false;
+  const v = Z.ende.verlierer;
+  const fehler = (Z.fehler_liste || []).sort((a, b) => b.kosten - a.kosten).slice(0, 6);
+  box.innerHTML = `<h2>${v === 0 ? "Du hast verloren und zahlst die Runde." : `${Z.namen[v]} hat verloren und zahlt die Runde.`}</h2>` +
+    (tippsAn ? (fehler.length ? `<p>Deine teuersten Entscheidungen:</p><div class="tabelle-box"><table><tr><th>Lage</th><th>Deine Wahl</th><th>Besser</th><th>Kosten</th></tr>` +
+      fehler.map(f => `<tr><td>${f.phase}, Deckel ${f.stand}<br>${f.situation}</td><td>${f.gewaehlt}</td><td>${f.beste}</td><td>${(f.kosten * 100).toFixed(1)} Pkt.</td></tr>`).join("") + `</table></div>`
+      : `<p>Keine einzige teure Entscheidung. Stark gespielt.</p>`) : "") +
+    `<div><button class="knopf haupt" type="button" id="k-nochmal">Nochmal</button></div>`;
+  document.getElementById("k-nochmal").onclick = () => starte();
+  if (Z.fehler.length) box.innerHTML += `<p class="meldung">Fehler: ${Z.fehler.join("; ")}</p>`;
+}
+
+// ------------------------------------------------------------------ Kopfleiste
+(function () {
+  const seg = document.getElementById("tempo");
+  for (const [k, text] of TEMPO) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = text; b.setAttribute("aria-pressed", String(k === tempo));
+    b.onclick = () => { tempo = k; merke("tempo", k); seg.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); };
+    seg.appendChild(b);
+  }
+  const t = document.getElementById("tipps-an");
+  t.checked = tippsAn;
+  t.onchange = () => { tippsAn = t.checked; merke("tipps", tippsAn ? "1" : "0"); if (Z) zeichne(); };
+  document.getElementById("neu-knopf").onclick = () => {
+    document.getElementById("einrichtung").hidden = false;
+    document.getElementById("einrichtung").scrollIntoView({ behavior: "smooth" });
+  };
+  document.getElementById("start-knopf").onclick = starte;
+  fetch("/api/verfuegbar").then(r => r.json()).then(d => { verfuegbar = d; zeichneEinrichtung(); });
+})();
+</script>
+</body>
+</html>

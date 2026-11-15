@@ -142,7 +142,7 @@ def _forciert_verdeckt(ist_starter, verdeckt_modus, grenze, naechster_wurf):
     return (not ist_starter) and verdeckt_modus and naechster_wurf == grenze
 
 
-def spiele_zug(strategie, spieler, position, grenze, verdeckt_modus, kontext, rng) -> Ergebnis:
+def spiele_zug(strategie, spieler, position, grenze, verdeckt_modus, kontext, rng, log=None) -> Ergebnis:
     """Ein kompletter Zug eines Spielers. `kontext` liefert die übrigen Sicht-Felder."""
     ist_starter = position == 0
     if ist_starter:
@@ -155,6 +155,7 @@ def spiele_zug(strategie, spieler, position, grenze, verdeckt_modus, kontext, rn
     if ist_starter:
         a = _pruefe(strategie, sicht("vor_wurf", 0, (), ()), ist_starter=True)
         verdeckt = a.verdeckt
+        _melde(log, "aktion", spieler=spieler, wurf_nr=0, aktion=a)
     else:
         verdeckt = _forciert_verdeckt(False, verdeckt_modus, grenze, 1)
 
@@ -164,21 +165,33 @@ def spiele_zug(strategie, spieler, position, grenze, verdeckt_modus, kontext, rn
         neu = tuple(rng.randint(1, 6) for _ in range(3 - len(gehalten)))
         wurf_nr += 1
         wuerfel = gehalten + neu
+        _melde(log, "wurf", spieler=spieler, wurf_nr=wurf_nr, gehalten=gehalten,
+               neu=None if verdeckt else neu, verdeckt=verdeckt)
         if verdeckt or wurf_nr >= grenze:
             break
         a = _pruefe(strategie, sicht("nach_wurf", wurf_nr, wuerfel, neu), ist_starter,
                     erzwungen=_forciert_verdeckt(ist_starter, verdeckt_modus, grenze, wurf_nr + 1))
+        _melde(log, "aktion", spieler=spieler, wurf_nr=wurf_nr, aktion=a)
         if a.stopp:
             break
         gehalten = a.behalten + (1,) * a.drehen
         verdeckt = a.verdeckt
 
     aus_der_hand = len(neu) == 3
-    return Ergebnis(
+    e = Ergebnis(
         spieler=spieler, position=position, wuerfe=wurf_nr, verdeckt=verdeckt,
         sichtbar=gehalten if verdeckt else wuerfel, wuerfel=wuerfel,
         aus_der_hand=aus_der_hand, wertung=bewerte(wuerfel, aus_der_hand),
     )
+    _melde(log, "zug_ende", ergebnis=e.oeffentlich())
+    return e
+
+
+def _melde(log, ereignis, **daten):
+    """Ruft log.<ereignis>(**daten) auf, falls der Beobachter das Ereignis kennt."""
+    f = getattr(log, ereignis, None) if log is not None else None
+    if f is not None:
+        f(**daten)
 
 
 def _pruefe(strategie, sicht, ist_starter, erzwungen=False) -> Aktion:
@@ -206,14 +219,15 @@ class RundenErgebnis:
     deckel_bewegt: int
 
 
-def spiele_runde(reihenfolge, strategien, kontext_basis, rng) -> RundenErgebnis:
+def spiele_runde(reihenfolge, strategien, kontext_basis, rng, log=None) -> RundenErgebnis:
     ergebnisse = []
     grenze, verdeckt_modus = MAX_WUERFE, False
+    _melde(log, "runde_start", reihenfolge=list(reihenfolge))
     for position, spieler in enumerate(reihenfolge):
         kontext = dict(kontext_basis,
                        bisher=tuple(e.oeffentlich() for e in ergebnisse),
                        nach_mir=len(reihenfolge) - position - 1)
-        e = spiele_zug(strategien[spieler], spieler, position, grenze, verdeckt_modus, kontext, rng)
+        e = spiele_zug(strategien[spieler], spieler, position, grenze, verdeckt_modus, kontext, rng, log)
         if position == 0:
             grenze, verdeckt_modus = e.wuerfe, e.verdeckt
         ergebnisse.append(e)
@@ -260,7 +274,7 @@ class Haelfte:
         """Eine Runde. Gibt den Verlierer der Hälfte zurück, falls sie damit endet, sonst None."""
         kontext = dict(deckel=tuple(self.deckel.items()), mitte=self.mitte, haelfte=self.name,
                        haelften_verlierer=self.haelften_verlierer)
-        r = spiele_runde(self.reihenfolge(), self.strategien, kontext, self.rng)
+        r = spiele_runde(self.reihenfolge(), self.strategien, kontext, self.rng, self.log)
         self.runden += 1
         hoch, tief = r.hoch.spieler, r.tief.spieler
         vorher = self.deckel[tief]
@@ -289,16 +303,12 @@ class Haelfte:
 
     def naechster_starter(self, tief) -> int:
         """Verlierer der Runde; bei leerer Mitte der Spieler mit den meisten Deckeln
-        (Gleichstand: ab dem Verlierer im Uhrzeigersinn der erste mit den meisten Deckeln)."""
+        (Gleichstand: zufällig unter den Spielern mit den meisten Deckeln)."""
         if self.mitte > 0:
             return tief
         meiste = max(self.deckel.values())
-        i = self.teilnehmer.index(tief)
-        for j in range(len(self.teilnehmer)):
-            p = self.teilnehmer[(i + j) % len(self.teilnehmer)]
-            if self.deckel[p] == meiste:
-                return p
-        raise AssertionError("unerreichbar")
+        kandidaten = [p for p in self.teilnehmer if self.deckel[p] == meiste]
+        return kandidaten[0] if len(kandidaten) == 1 else self.rng.choice(kandidaten)
 
 
 @dataclass
