@@ -1,0 +1,106 @@
+/* Layout: Kopfleiste, Filz-Tisch mit Spielerkarten, darunter die eigene Aktionsleiste und das Rundenprotokoll. */
+:root {
+  --bg: #eef1ef; --surface: #ffffff; --fg: #16201b; --muted: #5b6963; --line: #d4dcd8;
+  --filz: #1e5843; --filz-2: #246a51; --filz-fg: #eaf4ee; --filz-muted: #a9c8b9;
+  --accent: #c9851a; --accent-fg: #1a1205; --rot: #c0412c; --gruen: #2f8a58; --wuerfel: #fbfaf6; --pip: #16201b;
+  --font-head: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1311; --surface: #172019; --fg: #e5ece8; --muted: #95a59d; --line: #29342f;
+  --filz: #143c2e; --filz-2: #1a4a39; --filz-fg: #e5f1ea; --filz-muted: #8fb3a2;
+  --accent: #e2a23d; --rot: #e0624d; --gruen: #49b07a; --wuerfel: #f3f1ea; --pip: #16201b; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0e1311; --surface: #172019; --fg: #e5ece8; --muted: #95a59d; --line: #29342f;
+  --filz: #143c2e; --filz-2: #1a4a39; --filz-fg: #e5f1ea; --filz-muted: #8fb3a2;
+  --accent: #e2a23d; --rot: #e0624d; --gruen: #49b07a; --wuerfel: #f3f1ea; --pip: #16201b; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+.seite { max-width: 1100px; margin: 0 auto; padding: 16px max(16px, env(safe-area-inset-right, 0px)) 120px max(16px, env(safe-area-inset-left, 0px));
+  display: flex; flex-direction: column; gap: 16px; }
+h1, h2, h3 { font-family: var(--font-head); margin: 0; line-height: 1.2; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.15rem; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.leise { color: var(--muted); }
+.etikett { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--muted); }
+
+.kopf { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+.kopf-rechts { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.knopf { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+.knopf.haupt { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+.knopf.gross { padding: 12px 20px; font-size: 1.02rem; font-weight: 600; }
+.knopf:disabled { opacity: 0.45; cursor: not-allowed; }
+.segment { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.segment button { border: 0; background: var(--surface); color: var(--fg); padding: 6px 10px; font-size: 0.85rem; }
+.segment button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+label.schalter { display: inline-flex; gap: 6px; align-items: center; font-size: 0.9rem; }
+
+/* Einrichtung */
+.einrichtung { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.reihe { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.gegner-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.gegner-wahl { display: flex; flex-direction: column; gap: 4px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; }
+select { font: inherit; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+.erklaerung { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; font-size: 0.88rem; }
+.erklaerung div { padding: 10px; background: var(--bg); border-radius: 8px; }
+
+/* Tisch */
+.tisch { background: radial-gradient(ellipse at 50% 30%, var(--filz-2), var(--filz)); color: var(--filz-fg); border-radius: 16px; padding: 16px;
+  display: flex; flex-direction: column; gap: 14px; }
+.tisch-kopf { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.tisch-kopf .etikett { color: var(--filz-muted); }
+.mitte { display: flex; gap: 10px; align-items: center; }
+.stapel-deckel { display: flex; flex-wrap: wrap; gap: 3px; max-width: 220px; }
+.deckel { width: 14px; height: 14px; border-radius: 50%; background: #f1e3c2; border: 2px solid #b9884a; }
+.regelzeile { font-size: 0.9rem; color: var(--filz-muted); }
+.regelzeile b { color: var(--filz-fg); }
+.spieler-raster { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.spieler { background: rgba(0,0,0,0.18); border: 2px solid transparent; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.spieler.dran { border-color: var(--accent); background: rgba(0,0,0,0.28); }
+.spieler.raus { opacity: 0.45; }
+.spieler-kopf { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.spieler-name { font-family: var(--font-head); font-weight: 700; font-size: 1.05rem; }
+.zahl-deckel { font-family: var(--font-head); font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.marken { display: flex; gap: 5px; flex-wrap: wrap; }
+.marke { font-size: 0.72rem; padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,0.14); }
+.marke.hoch { background: var(--gruen); color: #fff; }
+.marke.tief { background: var(--rot); color: #fff; }
+.wuerfe { display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
+.wurf-zeile { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 0.82rem; }
+.wurf-nr { color: var(--filz-muted); width: 1.4em; }
+.wurf-text { color: var(--filz-muted); }
+.ergebnis { font-weight: 600; }
+.mini { display: inline-flex; gap: 3px; }
+
+/* eigene Aktion */
+.aktion { background: var(--surface); border: 2px solid var(--accent); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.aktion[hidden] { display: none !important; }
+.aktion-kopf { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; }
+.grosse-wuerfel { display: flex; gap: 14px; flex-wrap: wrap; }
+.wuerfel-knopf { border: 0; background: none; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--fg); }
+.wuerfel-knopf .unter { font-size: 0.75rem; color: var(--muted); min-height: 1.2em; }
+.wuerfel-knopf[aria-pressed="true"] svg { transform: translateY(-6px); filter: drop-shadow(0 4px 0 var(--accent)); }
+.wuerfel-knopf[aria-pressed="true"] .unter { color: var(--accent); font-weight: 600; }
+.wuerfel-knopf:disabled { cursor: default; }
+.knopf-reihe { display: flex; gap: 10px; flex-wrap: wrap; }
+.dreh-reihe { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 0.9rem; }
+.dreh-reihe button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.meldung { min-height: 1.4em; color: var(--rot); font-size: 0.9rem; }
+.tipp { padding: 10px 12px; border-radius: 8px; background: var(--bg); font-size: 0.9rem; }
+.tipp ol { margin: 6px 0 0; padding-left: 20px; }
+.rueckmeldung { padding: 10px 12px; border-radius: 8px; font-size: 0.92rem; border-left: 4px solid var(--gruen); background: var(--surface); border: 1px solid var(--line); border-left-width: 4px; }
+.rueckmeldung.teuer { border-left-color: var(--rot); }
+@media (prefers-reduced-motion: no-preference) { .wuerfel-knopf svg { transition: transform .12s ease; } }
+
+/* Protokoll */
+.protokoll { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.protokoll ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; max-height: 320px; overflow-y: auto; }
+.protokoll li.trenner { font-weight: 600; margin-top: 4px; }
+.ende { background: var(--surface); border: 2px solid var(--accent); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.ende table { border-collapse: collapse; font-size: 0.9rem; width: 100%; }
+.ende td, .ende th { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tabelle-box { overflow-x: auto; }

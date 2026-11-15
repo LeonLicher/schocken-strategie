@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Schocken am Tisch</title>
+<meta name="description" content="Schocken gegen Stammtisch-, Konter- und optimale Bots spielen, mit Tipps aus der exakten Lösung.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<div class="seite">
+  <header class="kopf">
+    <h1>Schocken am Tisch</h1>
+    <div class="kopf-rechts">
+      <span class="etikett">Tempo</span>
+      <div class="segment" id="tempo" role="group" aria-label="Tempo"></div>
+      <label class="schalter"><input type="checkbox" id="tipps-an"> Tipps</label>
+      <button class="knopf" id="neu-knopf" type="button">Neues Spiel</button>
+    </div>
+  </header>
+
+  <section class="einrichtung" id="einrichtung">
+    <h2>Neues Spiel</h2>
+    <p class="leise" id="lade-hinweis">Lade Lösungsdaten …</p>
+    <div class="reihe"><span class="etikett">Spieler am Tisch (mit dir)</span><div class="segment" id="anzahl" role="group" aria-label="Anzahl Spieler"></div></div>
+    <div class="gegner-liste" id="gegner-liste"></div>
+    <div class="reihe">
+      <label class="schalter"><input type="checkbox" id="tipps-start" checked> Tipps einschalten</label>
+      <span class="leise">Berater:</span><select id="berater" aria-label="Berater"></select>
+    </div>
+    <div class="erklaerung">
+      <div><b>Stammtisch</b>: wie am Tisch üblich. Startspieler hört mit einer Eins nach dem 2. Wurf auf, die anderen jagen den Schock.</div>
+      <div><b>Konter</b>: die exakt berechnete beste Antwort auf Stammtisch-Spieler.</div>
+      <div><b>Optimal</b>: perfektes Spiel, wenn alle perfekt spielen (zu zweit).</div>
+      <div><b>Faustregel</b>: einfacher Bot, hört auf, sobald er nicht mehr Letzter ist.</div>
+    </div>
+    <div class="reihe"><button class="knopf haupt gross" id="start-knopf" type="button" disabled>Spiel starten</button><span class="meldung" id="start-meldung"></span></div>
+  </section>
+
+  <section class="tisch" id="tisch" hidden>
+    <div class="tisch-kopf">
+      <div><span class="etikett" id="phase">Hälfte 1</span><div class="regelzeile" id="regelzeile"></div></div>
+      <div class="mitte"><span class="etikett">Mitte</span><span class="zahl-deckel" id="mitte-zahl">13</span><div class="stapel-deckel" id="mitte-deckel"></div></div>
+    </div>
+    <div class="spieler-raster" id="spieler"></div>
+  </section>
+
+  <section class="aktion" id="aktion" hidden aria-live="polite">
+    <div class="aktion-kopf"><h2 id="aktion-titel">Du bist dran</h2><span class="leise" id="aktion-info"></span></div>
+    <div class="grosse-wuerfel" id="grosse-wuerfel"></div>
+    <div class="dreh-reihe" id="dreh-reihe"></div>
+    <div class="knopf-reihe" id="knopf-reihe"></div>
+    <div class="meldung" id="aktion-meldung"></div>
+    <div id="tipp-box"></div>
+  </section>
+
+  <div id="rueckmeldung"></div>
+  <section class="ende" id="ende" hidden></section>
+
+  <section class="protokoll" id="protokoll-box" hidden>
+    <h2>Protokoll</h2>
+    <ul id="protokoll"></ul>
+  </section>
+</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

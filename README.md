@@ -19,6 +19,15 @@ Gegner:
 - **Optimal**: perfektes Spiel, wenn alle perfekt spielen (nur zu zweit).
 - **Faustregel**: einfacher Bot.
 
+### Online-Version (GitHub Pages)
+
+`site/` ist dasselbe Spiel komplett im Browser (JavaScript, ohne Server). Bei jedem Push nach `main` prüft
+eine GitHub Action, dass die Browser-Version exakt wie Python rechnet (`node tests/js/vergleich.mjs`,
+`node tests/js/spiel.mjs`), und veröffentlicht die Seite. Nach neuen Lösungen die Daten aktualisieren:
+`python werkzeuge/export_web.py`.
+
+Lokal ansehen: `python -m http.server -d site 8000` und http://localhost:8000 öffnen.
+
 ## Spielen im Terminal
 
 ```
