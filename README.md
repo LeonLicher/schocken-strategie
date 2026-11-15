@@ -35,6 +35,8 @@ python -m unittest discover -s tests -t .
 - `werkzeuge/situation.py`: Beste Entscheidung in einer beliebigen Situation nachschlagen (`--help`).
 - `werkzeuge/abweichungen.py`: Findet alle Situationen, in denen der Spielstand eine andere Entscheidung
   verlangt, und lernt dazu Regeln → `ergebnisse/abweichungen.md`.
+- `werkzeuge/abweichungen_seite.py`: Erzeugt die lesbare Fassung mit Spielstand-Karten →
+  `ergebnisse/abweichungen.html` (im Browser öffnen; Vorlage: `werkzeuge/abweichungen_vorlage.html`).
 
 Abhängigkeiten für Simulator und Lösung: `pip install numpy numba`.
 

@@ -9,23 +9,23 @@ Gesucht sind Situationen, in denen der Spielstand eine andere Entscheidung verla
 - **Vorsprung** = Deckel des Gegners − meine Deckel (positiv: ich liege vorn).
 - **halte 11 VERDECKT** = diese Würfel liegen lassen, den Rest verdeckt werfen (stehen lassen).
 
-Situationen mit Abweichung: 91917. Summe der Wirkung: **5.76 Prozentpunkte pro Spiel**: so viel weniger verliert man (näherungsweise), wenn man den Spielstand beachtet.
+Situationen mit Abweichung: 73713. Summe der Wirkung: **5.76 Prozentpunkte pro Spiel**: so viel weniger verliert man (näherungsweise), wenn man den Spielstand beachtet.
 
 ## Muster
 
 | Rolle | Wurf | Basis | Besser | Situationen | Wirkung (%-Pkt./Spiel) |
 |---|---|---|---|---|---|
-| Startspieler | 2 | aufhören | weiter verdeckt | 3571 | 1.926 |
-| Startspieler | 2 | weiter verdeckt | aufhören | 689 | 1.420 |
-| Startspieler | 1 | aufhören | weiter offen | 1184 | 0.697 |
-| Startspieler | 1 | weiter offen | aufhören | 541 | 0.592 |
-| Folgespieler | 2 | weiter verdeckt | aufhören | 2625 | 0.511 |
-| Folgespieler | 1 | weiter offen | aufhören | 40409 | 0.322 |
-| Folgespieler | 1 | weiter offen | weiter offen | 34509 | 0.140 |
-| Folgespieler | 2 | weiter verdeckt | weiter verdeckt | 3750 | 0.127 |
-| Folgespieler | 2 | aufhören | weiter verdeckt | 432 | 0.008 |
-| Startspieler | 1 | weiter offen | weiter offen | 20 | 0.007 |
-| Folgespieler | 2 | aufhören | weiter offen | 900 | 0.006 |
+| Startspieler | 2 | aufhören | weiter verdeckt | 2879 | 1.926 |
+| Startspieler | 2 | weiter verdeckt | aufhören | 562 | 1.420 |
+| Startspieler | 1 | aufhören | weiter offen | 949 | 0.697 |
+| Startspieler | 1 | weiter offen | aufhören | 434 | 0.592 |
+| Folgespieler | 2 | weiter verdeckt | aufhören | 2100 | 0.511 |
+| Folgespieler | 1 | weiter offen | aufhören | 32374 | 0.322 |
+| Folgespieler | 1 | weiter offen | weiter offen | 27687 | 0.140 |
+| Folgespieler | 2 | weiter verdeckt | weiter verdeckt | 3000 | 0.127 |
+| Folgespieler | 2 | aufhören | weiter verdeckt | 351 | 0.008 |
+| Startspieler | 1 | weiter offen | weiter offen | 16 | 0.007 |
+| Folgespieler | 2 | aufhören | weiter offen | 720 | 0.006 |
 
 ## Die 30 wirkungsvollsten Situationen und wann man abweichen sollte
 
@@ -60,9 +60,9 @@ Basis: *halte 1*. Wirkung 0.194 %-Pkt./Spiel, Gewinn bis 18.0 %-Pkt. Regel-Treff
 ### 4. Startspieler, nach Wurf 1: **6-1-1** (3 davon neu geworfen)
 Basis: *halte 11*. Wirkung 0.185 %-Pkt./Spiel, Gewinn bis 22.4 %-Pkt. Regel-Treffer 99 %.
 
-- Mitte leer, Vorsprung ≥ -5 → **fertig** (stimmt in 100 %, 26 % der Fälle)
+- Mitte leer, meine Deckel ≤ 9 → **fertig** (stimmt in 100 %, 26 % der Fälle)
 - Mitte nicht leer, Vorsprung ≤ 4 → halte 11 (stimmt in 100 %, 62 % der Fälle)
-- Mitte leer, Vorsprung ≤ -6 → halte 11 (stimmt in 100 %, 9 % der Fälle)
+- Mitte leer, meine Deckel ≥ 10 → halte 11 (stimmt in 100 %, 9 % der Fälle)
 - Mitte nicht leer, Vorsprung ≥ 5 → halte 11 (stimmt in 64 %, 3 % der Fälle)
 
 ### 5. Startspieler, nach Wurf 2: **5-1-1** (2 davon neu geworfen)
@@ -112,32 +112,32 @@ Basis: *halte 11 VERDECKT*. Wirkung 0.136 %-Pkt./Spiel, Gewinn bis 29.6 %-Pkt. R
 Basis: *fertig*. Wirkung 0.123 %-Pkt./Spiel, Gewinn bis 13.9 %-Pkt. Regel-Treffer 97 %.
 
 - Mitte leer, meine Deckel ≤ 7 → **halte 1 VERDECKT** (stimmt in 100 %, 14 % der Fälle)
-- Mitte leer, meine Deckel ≥ 9 → **halte 1 VERDECKT** (stimmt in 100 %, 12 % der Fälle)
+- Mitte leer, meine Deckel ≥ 8, Vorsprung ≤ -4 → **halte 1 VERDECKT** (stimmt in 100 %, 12 % der Fälle)
 - Mitte nicht leer, meine Deckel ≥ 9 → **halte 1 VERDECKT** (stimmt in 100 %, 3 % der Fälle)
 - Mitte nicht leer, meine Deckel 8 → **halte 1 VERDECKT** (stimmt in 74 %, 3 % der Fälle)
 - Mitte nicht leer, meine Deckel ≤ 7, Vorsprung ≥ -5 → fertig (stimmt in 99 %, 60 % der Fälle)
-- Mitte leer, meine Deckel 8 → fertig (stimmt in 100 %, 4 % der Fälle)
+- Mitte leer, meine Deckel ≥ 8, Vorsprung ≥ -3 → fertig (stimmt in 100 %, 4 % der Fälle)
 - Mitte nicht leer, meine Deckel ≤ 7, Vorsprung ≤ -6 → fertig (stimmt in 53 %, 3 % der Fälle)
 
 ### 11. Startspieler, nach Wurf 2: **5-3-1** (2 davon neu geworfen)
 Basis: *fertig*. Wirkung 0.117 %-Pkt./Spiel, Gewinn bis 13.4 %-Pkt. Regel-Treffer 97 %.
 
 - Mitte leer, meine Deckel ≤ 7 → **halte 1 VERDECKT** (stimmt in 100 %, 14 % der Fälle)
-- Mitte leer, meine Deckel ≥ 9 → **halte 1 VERDECKT** (stimmt in 100 %, 12 % der Fälle)
+- Mitte leer, meine Deckel ≥ 8, Vorsprung ≤ -4 → **halte 1 VERDECKT** (stimmt in 100 %, 12 % der Fälle)
 - Mitte nicht leer, meine Deckel ≥ 9 → **halte 1 VERDECKT** (stimmt in 100 %, 3 % der Fälle)
 - Mitte nicht leer, meine Deckel 8 → **halte 1 VERDECKT** (stimmt in 74 %, 3 % der Fälle)
 - Mitte nicht leer, meine Deckel ≤ 7, Vorsprung ≥ -5 → fertig (stimmt in 99 %, 60 % der Fälle)
-- Mitte leer, meine Deckel 8 → fertig (stimmt in 100 %, 4 % der Fälle)
+- Mitte leer, meine Deckel ≥ 8, Vorsprung ≥ -3 → fertig (stimmt in 100 %, 4 % der Fälle)
 - Mitte nicht leer, meine Deckel ≤ 7, Vorsprung ≤ -6 → fertig (stimmt in 53 %, 3 % der Fälle)
 
 ### 12. Startspieler, nach Wurf 2: **5-4-1** (2 davon neu geworfen)
 Basis: *fertig*. Wirkung 0.106 %-Pkt./Spiel, Gewinn bis 12.2 %-Pkt. Regel-Treffer 97 %.
 
 - Mitte leer, meine Deckel ≤ 7 → **halte 1 VERDECKT** (stimmt in 100 %, 14 % der Fälle)
-- Mitte leer, meine Deckel ≥ 9 → **halte 1 VERDECKT** (stimmt in 100 %, 12 % der Fälle)
+- Mitte leer, meine Deckel ≥ 8, Vorsprung ≤ -4 → **halte 1 VERDECKT** (stimmt in 100 %, 12 % der Fälle)
 - Mitte 1 bis 4, Vorsprung ≤ -6 → **halte 1 VERDECKT** (stimmt in 100 %, 4 % der Fälle)
 - Mitte nicht leer, Vorsprung -5 bis 4 → fertig (stimmt in 99 %, 58 % der Fälle)
-- Mitte leer, meine Deckel 8 → fertig (stimmt in 100 %, 4 % der Fälle)
+- Mitte leer, meine Deckel ≥ 8, Vorsprung ≥ -3 → fertig (stimmt in 100 %, 4 % der Fälle)
 - Mitte ≥ 5, Vorsprung ≤ -6 → fertig (stimmt in 61 %, 4 % der Fälle)
 - Mitte nicht leer, Vorsprung ≥ 5 → fertig (stimmt in 76 %, 3 % der Fälle)
 
@@ -201,14 +201,13 @@ Basis: *fertig*. Wirkung 0.077 %-Pkt./Spiel, Gewinn bis 8.3 %-Pkt. Regel-Treffer
 ### 19. Startspieler, nach Wurf 2: **5-1-1** (1 davon neu geworfen)
 Basis: *halte 11 VERDECKT*. Wirkung 0.075 %-Pkt./Spiel, Gewinn bis 19.7 %-Pkt. Regel-Treffer 98 %.
 
-- Mitte leer, meine Deckel ≤ 10, Vorsprung ≥ -5 → **fertig** (stimmt in 100 %, 21 % der Fälle)
+- Mitte leer, Vorsprung ≥ -7 → **fertig** (stimmt in 100 %, 25 % der Fälle)
 - Mitte 1 bis 3, Gegner-Deckel ≥ 4 → **halte 11** (stimmt in 90 %, 7 % der Fälle)
-- Mitte leer, meine Deckel ≤ 10, Vorsprung ≤ -6 → **fertig** (stimmt in 100 %, 5 % der Fälle)
 - Mitte ≥ 4, Vorsprung ≥ 4 → **fertig** (stimmt in 62 %, 3 % der Fälle)
-- Mitte leer, meine Deckel ≥ 12 → **fertig** (stimmt in 100 %, 2 % der Fälle)
+- Mitte leer, meine Deckel ≥ 12, Vorsprung ≤ -8 → **fertig** (stimmt in 100 %, 2 % der Fälle)
 - Mitte ≥ 4, Vorsprung ≤ 3 → halte 11 VERDECKT (stimmt in 100 %, 56 % der Fälle)
 - Mitte 1 bis 3, Gegner-Deckel ≤ 3 → halte 11 VERDECKT (stimmt in 84 %, 4 % der Fälle)
-- Mitte leer, meine Deckel 11 → halte 11 VERDECKT (stimmt in 100 %, 3 % der Fälle)
+- Mitte leer, meine Deckel ≤ 11, Vorsprung ≤ -8 → halte 11 VERDECKT (stimmt in 100 %, 3 % der Fälle)
 
 ### 20. Startspieler, nach Wurf 1: **3-3-2** (3 davon neu geworfen)
 Basis: *fertig*. Wirkung 0.073 %-Pkt./Spiel, Gewinn bis 15.9 %-Pkt. Regel-Treffer 98 %.
@@ -270,9 +269,9 @@ Basis: *halte 11 VERDECKT*. Wirkung 0.061 %-Pkt./Spiel, Gewinn bis 29.6 %-Pkt. R
 ### 26. Startspieler, nach Wurf 1: **4-3-3** (3 davon neu geworfen)
 Basis: *fertig*. Wirkung 0.057 %-Pkt./Spiel, Gewinn bis 13.1 %-Pkt. Regel-Treffer 98 %.
 
-- Mitte ≤ 1, meine Deckel ≥ 4, Gegner-Deckel ≥ 7 → **halte nichts** (stimmt in 100 %, 9 % der Fälle)
+- Mitte ≤ 1, Gegner-Deckel ≥ 7, Vorsprung ≤ 5 → **halte nichts** (stimmt in 100 %, 9 % der Fälle)
 - meine Deckel ≥ 11, Gegner-Deckel ≤ 6 → **halte nichts** (stimmt in 100 %, 5 % der Fälle)
-- Mitte ≤ 1, meine Deckel ≤ 3, Gegner-Deckel ≥ 7 → **halte nichts** (stimmt in 89 %, 3 % der Fälle)
+- Mitte ≤ 1, Gegner-Deckel ≥ 7, Vorsprung ≥ 6 → **halte nichts** (stimmt in 89 %, 3 % der Fälle)
 - meine Deckel ≤ 10, Gegner-Deckel ≤ 6, Vorsprung ≥ -7 → fertig (stimmt in 99 %, 78 % der Fälle)
 - meine Deckel ≤ 10, Gegner-Deckel ≤ 6, Vorsprung ≤ -8 → fertig (stimmt in 76 %, 2 % der Fälle)
 - Mitte ≥ 2, Gegner-Deckel ≥ 7 → fertig (stimmt in 100 %, 2 % der Fälle)
@@ -306,8 +305,8 @@ Basis: *fertig*. Wirkung 0.053 %-Pkt./Spiel, Gewinn bis 12.2 %-Pkt. Regel-Treffe
 ### 30. Startspieler, nach Wurf 1: **5-4-2** (3 davon neu geworfen)
 Basis: *fertig*. Wirkung 0.052 %-Pkt./Spiel, Gewinn bis 6.3 %-Pkt. Regel-Treffer 98 %.
 
-- Mitte leer, Gegner-Deckel ≥ 7, Vorsprung ≤ 6 → **halte nichts** (stimmt in 100 %, 8 % der Fälle)
-- Mitte leer, Gegner-Deckel ≥ 7, Vorsprung ≥ 7 → **halte nichts** (stimmt in 77 %, 3 % der Fälle)
+- Mitte leer, meine Deckel ≥ 4, Gegner-Deckel ≥ 7 → **halte nichts** (stimmt in 100 %, 8 % der Fälle)
+- Mitte leer, meine Deckel ≤ 3, Gegner-Deckel ≥ 7 → **halte nichts** (stimmt in 77 %, 3 % der Fälle)
 - meine Deckel ≥ 12, Gegner-Deckel ≤ 6 → **halte nichts** (stimmt in 100 %, 2 % der Fälle)
 - meine Deckel ≤ 11, Gegner-Deckel ≤ 6, Vorsprung ≥ -5 → fertig (stimmt in 100 %, 69 % der Fälle)
 - meine Deckel ≤ 11, Gegner-Deckel ≤ 6, Vorsprung ≤ -6 → fertig (stimmt in 94 %, 14 % der Fälle)

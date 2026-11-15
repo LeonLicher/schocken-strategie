@@ -37,7 +37,8 @@ Deckeln: 1: 27 %, 3: 38 %, 6: 50 %, 7: 50 %, 9: 58 %, 12: 73 %.
 ### Wann sich Abweichen lohnt (Abweichungsanalyse)
 
 Verglichen wird die optimale Entscheidung in jedem Spielstand mit der Entscheidung, die in der neutralen
-Lage (Spielbeginn, 0:0) richtig ist. Alle Situationen mit Regeln: [ergebnisse/abweichungen.md](ergebnisse/abweichungen.md)
+Lage (Spielbeginn, 0:0) richtig ist. **Am leichtesten zu lesen:** [ergebnisse/abweichungen.html](ergebnisse/abweichungen.html)
+(Spielstand-Karten je Situation, im Browser öffnen). Alle Situationen mit Regeln als Text: [ergebnisse/abweichungen.md](ergebnisse/abweichungen.md)
 (`python werkzeuge/abweichungen.py`). Einzelne Situation nachschlagen: `python werkzeuge/situation.py --help`.
 
 Wer den Spielstand beachtet, verliert rund **5,8 Prozentpunkte** seltener als jemand, der immer wie

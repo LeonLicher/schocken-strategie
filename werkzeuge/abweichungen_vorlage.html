@@ -1,0 +1,345 @@
+<title>Schocken-Abweichungen</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: eine Lesespalte; je Situation eine Karte mit Spielstand-Gitter (meine Deckel x Gegner-Deckel). */
+:root {
+  --bg: #f3f5f4; --surface: #ffffff; --fg: #17201d; --muted: #5a6762; --line: #d6dedb;
+  --accent: #0d6a5b; --normal: #cfd7d4; --leer: #17201d;
+  --c-stopp: #c4412c; --c-verdeckt: #3a4ea1; --c-weiter: #c98e12; --c-alt: #1d8c83; --c-alt2: #8b45a8;
+  --font-head: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #101513; --surface: #18201d; --fg: #e5ebe8; --muted: #98a6a0; --line: #2b3531;
+  --accent: #42b8a2; --normal: #36423e; --leer: #e5ebe8;
+  --c-stopp: #e2654f; --c-verdeckt: #7f91e6; --c-weiter: #e6b648; --c-alt: #3cc3b6; --c-alt2: #bb7ed6; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #101513; --surface: #18201d; --fg: #e5ebe8; --muted: #98a6a0; --line: #2b3531;
+  --accent: #42b8a2; --normal: #36423e; --leer: #e5ebe8;
+  --c-stopp: #e2654f; --c-verdeckt: #7f91e6; --c-weiter: #e6b648; --c-alt: #3cc3b6; --c-alt2: #bb7ed6; color-scheme: dark }
+
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.seite { max-width: 880px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--font-head); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(1.8rem, 5vw, 2.5rem); letter-spacing: -0.01em; }
+h2 { font-size: 1.35rem; margin-top: 8px; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.stapel { display: flex; flex-direction: column; gap: 14px; }
+.abschnitt { display: flex; flex-direction: column; gap: 14px; margin-top: 40px; }
+.leise { color: var(--muted); }
+.etikett { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+.kopf { display: flex; flex-direction: column; gap: 14px; }
+.kennzahl { display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; padding: 16px 18px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; }
+.kennzahl b { font-family: var(--font-head); font-size: 2.2rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+.kennzahl span { max-width: 52ch; }
+
+.lesehilfe { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: start; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
+.lesehilfe ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+@media (max-width: 620px) { .lesehilfe { grid-template-columns: 1fr; } }
+
+ol.kurz { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; max-width: 72ch; }
+ol.kurz b { font-weight: 600; }
+
+.muster { display: flex; flex-direction: column; gap: 8px; }
+.muster-zeile { display: grid; grid-template-columns: minmax(0, 1fr) 140px 56px; gap: 12px; align-items: center; font-size: 0.92rem; }
+.balken { height: 10px; border-radius: 5px; background: var(--accent); }
+.balken-spur { background: var(--line); border-radius: 5px; overflow: hidden; }
+.zahl { font-variant-numeric: tabular-nums; text-align: right; color: var(--muted); }
+@media (max-width: 520px) { .muster-zeile { grid-template-columns: minmax(0, 1fr) 70px 48px; } }
+
+.steuerung { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg);
+  padding-block: 10px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.knoepfe { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.knoepfe .etikett { margin-right: 4px; }
+button.wahl { font: inherit; font-size: 0.85rem; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--fg); cursor: pointer; }
+button.wahl[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+button.wahl:focus-visible, .zelle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.karten { display: flex; flex-direction: column; gap: 22px; margin-top: 18px; }
+.karte { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px;
+  display: flex; flex-direction: column; gap: 14px; scroll-margin-top: 120px; }
+.karte-kopf { display: flex; gap: 14px; align-items: flex-start; }
+.rang { font-family: var(--font-head); font-weight: 700; color: var(--muted); font-size: 0.9rem; min-width: 2.2em; padding-top: 2px; }
+.lage { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.wurf { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.wuerfel { display: inline-flex; gap: 5px; }
+.wuerfel svg { display: block; }
+.normal { padding: 10px 12px; border-radius: 8px; background: var(--bg); font-size: 0.93rem; }
+.werte { display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.88rem; color: var(--muted); }
+.werte b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.koerper { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 640px) { .koerper { grid-template-columns: 1fr; } }
+.gitter-box { overflow-x: auto; }
+.gitter-box svg { display: block; max-width: 100%; height: auto; }
+.legende { display: flex; flex-direction: column; gap: 8px; font-size: 0.9rem; min-width: 0; }
+.legende-eintrag { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 8px; align-items: start; }
+.farbe { width: 16px; height: 16px; border-radius: 3px; margin-top: 3px; }
+.info { min-height: 3.2em; font-size: 0.9rem; padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--bg); border-radius: 0 6px 6px 0; }
+details { font-size: 0.9rem; }
+details summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+details ul { margin: 8px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.zelle { cursor: pointer; }
+.zelle:hover { stroke: var(--fg); stroke-width: 1.5; }
+.leer-hinweis { padding: 20px; text-align: center; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+
+<div class="seite">
+  <header class="kopf">
+    <span class="etikett">Schocken zu zweit · exakt berechnet</span>
+    <h1>Wann du anders spielen solltest</h1>
+    <p>Die meisten Entscheidungen sind in jedem Spielstand gleich. <b>Normal</b> heißt hier: so, wie es zu Spielbeginn
+      richtig ist (0 : 0 Deckel, volle Mitte). Diese Seite zeigt die Situationen, in denen der Spielstand eine
+      <b>andere</b> Entscheidung verlangt, und in welchen Spielständen genau.</p>
+    <div class="kennzahl"><b id="gesamt"></b><span>Prozentpunkte seltener verliert, wer den Spielstand beachtet, verglichen mit jemandem,
+      der immer wie zu Spielbeginn spielt.</span></div>
+  </header>
+
+  <section class="abschnitt">
+    <h2>So liest du die Karten</h2>
+    <div class="lesehilfe">
+      <svg id="beispiel" width="190" height="190" viewBox="0 0 190 190" role="img" aria-label="Beispiel einer Spielstand-Karte"></svg>
+      <ul>
+        <li>Jedes Kästchen ist ein Spielstand: <b>nach rechts deine Deckel</b>, <b>nach oben die Deckel des Gegners</b>.
+          Unten links ist der Spielbeginn (0 : 0).</li>
+        <li>Die schräge Kante oben rechts (dick umrandet) heißt: <b>Mitte leer</b>. Dort wandern Deckel zwischen euch hin und her,
+          und es beginnt, wer mehr Deckel hat.</li>
+        <li><b>Grau</b> = spiel wie normal. <b>Farbig</b> = spiel anders, die Farbe sagt wie (siehe Legende neben jeder Karte).</li>
+        <li>Je <b>kräftiger</b> die Farbe, desto mehr bringt das Abweichen (voll ab 2 Prozentpunkten). Blass = kleiner Vorteil.</li>
+        <li>Fahre über ein Kästchen oder tippe darauf: Darunter steht dann der genaue Spielstand und wie viel es bringt.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="abschnitt">
+    <h2>Die Kurzfassung</h2>
+    <p class="leise">Fast alle wichtigen Abweichungen hängen an einer Frage: Ist die Mitte leer?</p>
+    <ol class="kurz">
+      <li><b>Schock 6 bei leerer Mitte stehen lassen</b>, im 1. wie im 2. Wurf, statt auf Schock Aus zu gehen.
+        Schock 5 im 2. Wurf ebenso. Zu Spielbeginn würde man die Einsen halten und weiterwerfen.</li>
+      <li><b>Eine Eins plus schwache Würfel im 2. Wurf</b> (2-2-1 bis 6-4-1): normal aufhören.
+        Bei leerer Mitte (oder 5+ Deckel Rückstand) die Eins liegen lassen und verdeckt nachwerfen.</li>
+      <li><b>3-2-1 im 1. Wurf</b>: normal die Eins halten. Bei leerer Mitte sofort stehen lassen.</li>
+      <li><b>Als Zweiter gegen einen verdeckten Gegner</b> (offen liegt eine Eins) mit 6-1-1 nach dem 2. Wurf:
+        normal blind weiterwerfen, bei leerer Mitte offen stehen lassen.</li>
+      <li><b>Schwacher 1. Wurf ohne Eins</b> (3-2-2, 4-2-2 …): normal fertig. Ist die Mitte (fast) leer und du liegst
+        weit hinten, alle drei neu werfen.</li>
+    </ol>
+  </section>
+
+  <section class="abschnitt">
+    <h2>Wo der Vorteil steckt</h2>
+    <p class="leise">Summe des Vorteils je Art von Abweichung, in Prozentpunkten pro Spiel.</p>
+    <div class="muster" id="muster"></div>
+  </section>
+
+  <section class="abschnitt">
+    <h2>Alle Situationen</h2>
+    <p class="leise" id="anzahl-text"></p>
+    <div class="steuerung">
+      <div class="knoepfe" id="phasen" role="group" aria-label="Phase"><span class="etikett">Phase</span></div>
+      <div class="knoepfe" id="themen" role="group" aria-label="Würfe"><span class="etikett">Würfe</span></div>
+    </div>
+    <div class="karten" id="karten"></div>
+  </section>
+</div>
+
+<script>
+const DATEN = __DATEN__;
+
+const PHASEN_TEXT = ["Hälfte 1", "Hälfte 2, Gegner verlor H1", "Finale", "Hälfte 2, ich verlor H1"];
+const THEMEN = [["alle", "Alle"], ["schock", "Zwei Einsen"], ["eins", "Eine Eins"], ["ohne", "Ohne Eins"], ["zweiter", "Als Zweiter"]];
+const FARBEN = { stopp: ["--c-stopp", "--c-alt2"], verdeckt: ["--c-verdeckt", "--c-alt"], weiter: ["--c-weiter", "--c-alt"],
+                 offen: ["--c-weiter", "--c-alt"] };
+const ZELLE = 18, RAND = 34;
+
+function lies(k, std) { try { return localStorage.getItem(k) ?? std; } catch (e) { return std; } }
+function merke(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+let phase = Number(lies("phase", "2"));
+let themaWahl = lies("thema", "alle");
+if (!(phase >= 0 && phase < 4)) phase = 2;
+
+const fmt = (x, n = 1) => x.toLocaleString("de-DE", { minimumFractionDigits: n, maximumFractionDigits: n });
+
+function wuerfelSVG(v, groesse = 30) {
+  const p = { 1: [[2, 2]], 2: [[1, 1], [3, 3]], 3: [[1, 1], [2, 2], [3, 3]], 4: [[1, 1], [3, 1], [1, 3], [3, 3]],
+              5: [[1, 1], [3, 1], [2, 2], [1, 3], [3, 3]], 6: [[1, 1], [3, 1], [1, 2], [3, 2], [1, 3], [3, 3]] }[v];
+  const pips = p.map(([x, y]) => `<circle cx="${x * 6 + 3}" cy="${y * 6 + 3}" r="2.1" style="fill:var(--fg)"/>`).join("");
+  return `<svg width="${groesse}" height="${groesse}" viewBox="0 0 30 30" role="img" aria-label="${v}">
+    <rect x="1" y="1" width="28" height="28" rx="6" style="fill:var(--surface);stroke:var(--fg);stroke-width:1.6"/>${pips}</svg>`;
+}
+
+function rolleText(s) {
+  if (s.rolle === "Startspieler") return "Du beginnst die Runde";
+  const g = s.gegner;
+  if (g.verdeckt) {
+    const sicht = g.sichtbar.length ? `, offen liegt ${g.sichtbar.join("-")}` : "";
+    return `Du bist Zweiter. Der Gegner hat nach ${g.wuerfe} Würfen verdeckt stehen lassen${sicht}`;
+  }
+  return `Du bist Zweiter. Der Gegner hat ${g.wertung} nach ${g.wuerfe} ${g.wuerfe === 1 ? "Wurf" : "Würfen"}`;
+}
+
+function neuText(m) {
+  return { 3: "alle drei neu geworfen", 2: "ein Würfel lag schon, zwei neu geworfen", 1: "zwei Würfel lagen schon, einer neu geworfen" }[m];
+}
+
+function farbeVon(s, idx) {
+  // Grau für die normale Aktion, sonst Farbe nach Art; zweite Aktion gleicher Art bekommt die Ausweichfarbe.
+  const a = s.aktionen[idx];
+  if (a.kurz === s.basis.kurz) return "--normal";
+  const gleicheArt = s.aktionen.filter(x => x.kat === a.kat && x.kurz !== s.basis.kurz);
+  return FARBEN[a.kat][Math.min(gleicheArt.indexOf(a), 1)];
+}
+
+function gitterSVG(s, karte, mitBeschriftung = true) {
+  const n = 13, b = RAND, breite = b + n * ZELLE + 6, hoehe = n * ZELLE + b + 6;
+  let teile = [];
+  for (let g = 0; g < n; g++) for (let i = 0; i < n; i++) {
+    const z = karte ? karte[g][i] : null;
+    const x = b + i * ZELLE, y = (n - 1 - g) * ZELLE + 4;
+    if (!z) continue;
+    const [idx, gewinn, haeufig] = z;
+    const normal = s.aktionen[idx].kurz === s.basis.kurz || gewinn < 0.005;
+    const farbe = normal ? "--normal" : farbeVon(s, idx);
+    const deckkraft = normal ? 1 : Math.min(1, 0.28 + 0.72 * gewinn / 2);
+    const leer = i + g === 13;
+    teile.push(`<rect class="zelle" tabindex="-1" data-i="${i}" data-g="${g}" x="${x + 1}" y="${y + 1}" width="${ZELLE - 2}" height="${ZELLE - 2}" rx="3"
+      style="fill:var(${farbe});fill-opacity:${deckkraft};${leer ? "stroke:var(--leer);stroke-width:1.6;" : ""}${haeufig === 0 ? "opacity:.45;" : ""}"/>`);
+  }
+  if (mitBeschriftung) {
+    for (let i = 0; i < n; i += 2) teile.push(`<text x="${b + i * ZELLE + ZELLE / 2}" y="${n * ZELLE + 18}" text-anchor="middle" font-size="10" style="fill:var(--muted)">${i}</text>`);
+    for (let g = 0; g < n; g += 2) teile.push(`<text x="${b - 6}" y="${(n - 1 - g) * ZELLE + 4 + ZELLE / 2 + 3.5}" text-anchor="end" font-size="10" style="fill:var(--muted)">${g}</text>`);
+    teile.push(`<text x="${b + n * ZELLE / 2}" y="${n * ZELLE + 32}" text-anchor="middle" font-size="11" style="fill:var(--muted)">deine Deckel →</text>`);
+    teile.push(`<text transform="translate(10 ${n * ZELLE / 2 + 4}) rotate(-90)" text-anchor="middle" font-size="11" style="fill:var(--muted)">Deckel Gegner →</text>`);
+  }
+  return `<svg width="${breite}" height="${hoehe + (mitBeschriftung ? 14 : 0)}" viewBox="0 0 ${breite} ${hoehe + (mitBeschriftung ? 14 : 0)}" role="img"
+    aria-label="Spielstand-Karte">${teile.join("")}</svg>`;
+}
+
+function haeufigText(h) {
+  if (!h) return "Kommt bei guter Spielweise praktisch nie vor.";
+  const alle = 1 / h;
+  if (alle < 1.5) return "Kommt etwa einmal pro Spiel vor.";
+  return `Kommt etwa in 1 von ${alle < 100 ? Math.round(alle) : Math.round(alle / 10) * 10} Spielen vor.`;
+}
+
+function infoText(s, i, g) {
+  const z = s.karten[phase][g][i];
+  if (!z) return "Diesen Spielstand gibt es nicht.";
+  const [idx, gewinn, haeufig] = z;
+  const mitte = 13 - i - g;
+  const a = s.aktionen[idx];
+  const lage = `<b>Du ${i} : Gegner ${g}</b>, ${mitte === 0 ? "Mitte leer" : `Mitte ${mitte}`} (${PHASEN_TEXT[phase]}).`;
+  const normal = a.kurz === s.basis.kurz || gewinn < 0.005;
+  const was = normal ? `Spiel wie normal: ${s.basis.lang}.`
+                     : `Besser: <b>${a.lang}</b>. Das senkt deine Verlustchance um ${fmt(gewinn, 2)} Prozentpunkte gegenüber normal.`;
+  return `${lage} ${was} ${haeufigText(haeufig)}`;
+}
+
+function regelText(s, r) {
+  const a = s.aktionen.find(x => x.alt === r.dann);
+  const name = a ? a.lang : r.dann;
+  const anders = a ? a.kurz !== s.basis.kurz : true;
+  return `<li>${r.wenn === "immer" ? "Immer" : "Wenn " + r.wenn} → ${anders ? "<b>" + name + "</b>" : "wie normal"}
+    <span class="leise">(stimmt in ${r.stimmt} %, betrifft ${r.anteil} % der Fälle)</span></li>`;
+}
+
+function karteHTML(s) {
+  const wurf = s.wurf
+    ? `<div class="wurf"><span>Nach deinem ${s.wurf}. Wurf:</span><span class="wuerfel">${s.wuerfel.map(v => wuerfelSVG(v)).join("")}</span>
+         <span class="leise">${neuText(s.neu)}</span></div>`
+    : `<div class="wurf"><span>Vor deinem ersten Wurf</span></div>`;
+  const legende = s.aktionen
+    .map((a, idx) => ({ a, idx, normal: a.kurz === s.basis.kurz }))
+    .sort((x, y) => (y.normal - x.normal))
+    .map(({ a, idx, normal }) => `<div class="legende-eintrag"><span class="farbe" style="background:var(${normal ? "--normal" : farbeVon(s, idx)})"></span>
+        <span>${normal ? "Wie normal: " : "Anders: "}${a.lang}</span></div>`).join("");
+  return `<article class="karte" id="s${s.rang}" data-thema="${s.thema}">
+    <div class="karte-kopf"><span class="rang" title="Rang nach Gesamtvorteil">#${s.rang}</span>
+      <div class="lage"><h3>${rolleText(s)}</h3>${wurf}</div></div>
+    <div class="normal"><span class="etikett">Normal</span><br>${s.basis.lang}</div>
+    <div class="werte"><span>Vorteil insgesamt: <b>${fmt(s.wirkung, 2)}</b> %-Pkt. pro Spiel</span>
+      <span>im besten Spielstand: <b>${fmt(s.gewinn_max)}</b> %-Pkt.</span></div>
+    <div class="koerper">
+      <div class="gitter-box">${gitterSVG(s, s.karten[phase])}</div>
+      <div class="legende">${legende}
+        <div class="leise">Kräftig = großer Vorteil, blass = kleiner. Dick umrandet = Mitte leer. Durchscheinend = kommt praktisch nie vor.</div>
+      </div>
+    </div>
+    <div class="info" aria-live="polite">Fahre über ein Kästchen oder tippe darauf.</div>
+    <details><summary>Als Regel in Worten (Treffer ${s.regel_treffer} %)</summary>
+      <ul>${s.kurzregel.map(r => regelText(s, r)).join("")}</ul>
+      <p class="leise" style="margin-top:6px">Vorsprung = Deckel des Gegners minus deine Deckel (positiv: du liegst vorn).
+        Die Regel ist eine Vereinfachung der Karte; die Karte ist genau.</p>
+    </details>
+  </article>`;
+}
+
+function zeichneKarten() {
+  const sichtbar = DATEN.situationen.filter(s => themaWahl === "alle" || s.thema === themaWahl);
+  const ziel = document.getElementById("karten");
+  ziel.innerHTML = sichtbar.length ? sichtbar.map(karteHTML).join("") : `<div class="leer-hinweis">Keine Situation in dieser Auswahl.</div>`;
+  for (const el of ziel.querySelectorAll(".karte")) {
+    const s = DATEN.situationen.find(x => "s" + x.rang === el.id);
+    const info = el.querySelector(".info");
+    const zeige = e => {
+      const z = e.target.closest(".zelle");
+      if (z) info.innerHTML = infoText(s, Number(z.dataset.i), Number(z.dataset.g));
+    };
+    el.querySelector(".gitter-box").addEventListener("mouseover", zeige);
+    el.querySelector(".gitter-box").addEventListener("click", zeige);
+  }
+}
+
+function knoepfe(zielId, eintraege, aktiv, beiWahl) {
+  const ziel = document.getElementById(zielId);
+  for (const [wert, text] of eintraege) {
+    const k = document.createElement("button");
+    k.className = "wahl"; k.type = "button"; k.textContent = text; k.id = zielId + "-" + wert;
+    k.setAttribute("aria-pressed", String(wert === aktiv));
+    k.addEventListener("click", () => {
+      for (const b of ziel.querySelectorAll("button")) b.setAttribute("aria-pressed", String(b === k));
+      beiWahl(wert);
+    });
+    ziel.appendChild(k);
+  }
+}
+
+function zeichneMuster() {
+  const rolle = r => r === "Startspieler" ? "Du beginnst" : "Du bist Zweiter";
+  const wurf = w => w ? `nach dem ${w}. Wurf` : "vor dem 1. Wurf";
+  const max = Math.max(...DATEN.muster.map(m => m.wirkung));
+  document.getElementById("muster").innerHTML = DATEN.muster.map(m => `<div class="muster-zeile">
+      <span>${rolle(m.rolle)}, ${wurf(m.wurf)}: normal <i>${m.basis}</i>, besser <b>${m.besser}</b></span>
+      <span class="balken-spur"><span class="balken" style="display:block;width:${(m.wirkung / max * 100).toFixed(1)}%"></span></span>
+      <span class="zahl">${fmt(m.wirkung, 2)}</span></div>`).join("");
+}
+
+function zeichneBeispiel() {
+  // Beispielkarte aus der wirkungsvollsten Situation, ohne Beschriftung, mit Markierungen.
+  const s = DATEN.situationen[0];
+  const svg = gitterSVG(s, s.karten[phase], false).replace(/<svg[^>]*>|<\/svg>/g, "");
+  const n = 13, b = RAND;
+  document.getElementById("beispiel").setAttribute("viewBox", `0 0 ${b + n * ZELLE + 6} ${n * ZELLE + b + 6}`);
+  document.getElementById("beispiel").innerHTML = svg +
+    `<text x="${b}" y="${n * ZELLE + 22}" font-size="12" style="fill:var(--muted)">Spielbeginn</text>
+     <text x="${b + 7 * ZELLE}" y="${3 * ZELLE}" font-size="12" style="fill:var(--muted)">Mitte leer</text>`;
+}
+
+document.getElementById("gesamt").textContent = fmt(DATEN.gesamt, 1);
+document.getElementById("anzahl-text").textContent =
+  `Die ${DATEN.situationen.length} wirkungsvollsten von ${DATEN.anzahl_abweichungen.toLocaleString("de-DE")} gefundenen Abweichungen, sortiert nach Gesamtvorteil. Die Phase gilt für alle Karten.`;
+knoepfe("phasen", PHASEN_TEXT.map((t, i) => [i, t]), phase, w => { phase = w; merke("phase", String(w)); zeichneKarten(); zeichneBeispiel(); });
+knoepfe("themen", THEMEN, themaWahl, w => { themaWahl = w; merke("thema", w); zeichneKarten(); });
+zeichneMuster();
+zeichneBeispiel();
+zeichneKarten();
+</script>

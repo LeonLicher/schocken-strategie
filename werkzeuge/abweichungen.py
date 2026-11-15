@@ -56,7 +56,8 @@ class Zaehler:
         self.c = Counter()
 
     def _zaehle(self, h):
-        l1 = h.haelften_verlierer[0] if h.haelften_verlierer else None
+        # Wer Hälfte 1 verloren hat, zählt nur in Hälfte 2 (im Finale ist es egal)
+        l1 = h.haelften_verlierer[0] if h.name == "Hälfte 2" else None
         d = h.deckel
         for ich in (0, 1):
             lage = Lage(h.name, None if l1 is None else ("ich" if l1 == ich else "gegner"),
