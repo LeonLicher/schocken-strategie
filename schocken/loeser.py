@@ -272,7 +272,9 @@ class Haelfte2:
             x = min(a, d[1 - empfaenger])
             d[1 - empfaenger] -= x
         d[empfaenger] += x
-        return self.wert(mitte, d[0], empfaenger)
+        # Nächster Startspieler: Verlierer der Runde; bei leerer Mitte der mit den meisten Deckeln
+        starter = empfaenger if mitte > 0 else (0 if d[0] > d[1] else 1)
+        return self.wert(mitte, d[0], starter)
 
     def AB(self, mitte, d0, starter):
         """A, B aus Sicht des Starters (P Starter verliert Spiel) für runde2."""

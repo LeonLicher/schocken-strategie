@@ -38,9 +38,11 @@ def main():
     print(f"\nP(Spieler 0 verliert das Spiel), wenn er das Spiel beginnt: {p0:.5f}")
     print(f"P(Spieler 0 verliert das Spiel), wenn der andere beginnt:  {p1:.5f}")
     print(f"Finale: P(Startspieler verliert) = {s.finale.wert(GESAMT, 0, 0):.5f}")
-    print("\nFinale, Mitte leer, P(Startspieler 0 verliert) je nach eigenen Deckeln:")
+    print("\nFinale, Mitte leer (es beginnt, wer mehr Deckel hat): P(ich verliere) je nach meinen Deckeln:")
     for d0 in range(1, 13):
-        print(f"  {d0:2d} Deckel (Gegner {13 - d0:2d}): {s.finale.wert(0, d0, 0):.4f}")
+        starter = 0 if d0 > GESAMT - d0 else 1
+        print(f"  ich {d0:2d} : Gegner {13 - d0:2d} ({'ich beginne' if starter == 0 else 'Gegner beginnt'}): "
+              f"{s.finale.wert(0, d0, starter):.4f}")
 
 
 if __name__ == "__main__":

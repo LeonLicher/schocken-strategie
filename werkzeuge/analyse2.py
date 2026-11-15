@@ -91,7 +91,8 @@ def main():
 
     # Über alle Zustände: wie oft spielt der Startspieler verdeckt?
     print("\nAnteil verdeckter Züge des Startspielers je Spielstand (Finale):")
-    for mitte, d0 in [(13, 0), (6, 3), (0, 6), (0, 1), (0, 12)]:
+    # Bei leerer Mitte beginnt, wer mehr Deckel hat: nur erreichbare Stände (ich >= 7)
+    for mitte, d0 in [(13, 0), (6, 3), (0, 7), (0, 9), (0, 12)]:
         Uo, Uv, V, EV, wert = starter_politik(f, mitte, d0, 0)
         _, enden = zustandsverteilung(Uo, Uv, V, EV, 3, True, False)
         anteil = sum(p for (art, _, _), p in enden.items() if art == "verdeckt")

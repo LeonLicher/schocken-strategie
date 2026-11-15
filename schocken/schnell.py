@@ -155,9 +155,19 @@ def _haelfte(params, teilnehmer, starter, RANG, KLASSE, DECKEL):
             menge = min(hoch_deckel, deckel[hoch_platz])
             deckel[hoch_platz] -= menge
             deckel[tief_platz] += menge
-        start_platz = tief_platz
         if deckel[tief_platz] == DECKEL_GESAMT:
             return teilnehmer[tief_platz]
+        start_platz = tief_platz
+        if mitte == 0:
+            # Mitte leer: der Spieler mit den meisten Deckeln beginnt (Gleichstand: ab Verlierer im Uhrzeigersinn)
+            meiste = 0
+            for j in range(n):
+                meiste = max(meiste, deckel[j])
+            for j in range(n):
+                platz = (tief_platz + j) % n
+                if deckel[platz] == meiste:
+                    start_platz = platz
+                    break
 
 
 @njit(cache=True)

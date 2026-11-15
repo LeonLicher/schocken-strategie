@@ -47,6 +47,8 @@ def main():
     ap.add_argument("--gegner-wuerfe", type=int, help="Wurfzahl des Gegners (= meine Grenze)")
     a = ap.parse_args()
 
+    if a.mitte == 0 and (a.start == "ich") != (a.ich > a.gegner):
+        ap.error("Bei leerer Mitte beginnt immer der Spieler mit den meisten Deckeln.")
     s = lade_loesung2()
     lage = Lage(HAELFTEN[a.haelfte], a.h1 if a.haelfte == "2" else None, a.mitte, a.ich, a.gegner, a.start)
     if a.start == "ich":

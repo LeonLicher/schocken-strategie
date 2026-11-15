@@ -284,8 +284,21 @@ class Haelfte:
         assert self.mitte + sum(self.deckel.values()) == DECKEL_GESAMT
         if self.log:
             self.log.runde(self, r)
-        self.starter = tief
+        self.starter = self.naechster_starter(tief)
         return tief if self.deckel[tief] == DECKEL_GESAMT else None
+
+    def naechster_starter(self, tief) -> int:
+        """Verlierer der Runde; bei leerer Mitte der Spieler mit den meisten Deckeln
+        (Gleichstand: ab dem Verlierer im Uhrzeigersinn der erste mit den meisten Deckeln)."""
+        if self.mitte > 0:
+            return tief
+        meiste = max(self.deckel.values())
+        i = self.teilnehmer.index(tief)
+        for j in range(len(self.teilnehmer)):
+            p = self.teilnehmer[(i + j) % len(self.teilnehmer)]
+            if self.deckel[p] == meiste:
+                return p
+        raise AssertionError("unerreichbar")
 
 
 @dataclass
