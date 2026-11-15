@@ -59,6 +59,9 @@ class TestWeb(unittest.TestCase):
     def test_zu_zweit_gegen_optimal_mit_tipps(self):
         self.spiele_durch(["mensch", "optimal"], "optimal")
 
+    def test_zu_dritt_mit_konter_tipps(self):
+        self.spiele_durch(["mensch", "konter", "stammtisch"], "konter")
+
     def test_zu_dritt_gegen_stammtisch(self):
         self.spiele_durch(["mensch", "stammtisch", "faustregel"], None)
 

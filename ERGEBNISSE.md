@@ -64,6 +64,41 @@ Beispiel (Finale, eigener Start, Mitte leer, 7 : 6, nach Wurf 2, alle drei neu g
 6-1-1 und 5-1-1 stehen lassen (12,5 bzw. 3,3 %-Pkt. besser als weiterzuwerfen); eine Eins plus
 schwache Würfel: Eins halten, verdeckt nachwerfen (bis 1 %-Pkt. besser).
 
+## Gegen Stammtisch-Spieler: Konter (exakt)
+
+**Stammtisch-Spielweise** (Modell, `bots.stammtisch_entscheidung`): Sonderwürfe (Straße, General, Schock)
+bleiben stehen. Der Startspieler hört ab dem 2. Wurf mit einer Eins auf, ohne Eins wirft er alle drei neu.
+Alle anderen halten Einsen und jagen den Schock, ohne auf die anderen zu achten. Sechsen werden gedreht,
+verdeckt wird nie.
+
+**Konter** ist die exakt berechnete beste Antwort darauf (`python werkzeuge/loese_konter.py`).
+Weil Stammtisch-Spieler nicht auf andere reagieren, ist das viel einfacher zu rechnen als das echte Optimum.
+
+| Spieler am Tisch | Konter verliert | fair wäre | geprüft per Simulation |
+|---|---|---|---|
+| 2 | **26,0 %** | 50 % | 26,2 % ± 0,9 % (10.000 Spiele) |
+| 3 | **14,0 %** | 33,3 % | 14,0 % ± 0,8 % (8.000 Spiele) |
+
+Was Konter zu zweit anders macht (Startspieler, Spielbeginn; `python werkzeuge/analyse_konter.py --spieler 2`):
+- **Schock (1-1-x) im 1. oder 2. Wurf nicht stehen lassen**, sondern die Einsen halten und weiter auf
+  Schock Aus gehen (bis +4 %-Pkt.). Die Gegner jagen ohnehin den Schock; ein kleiner Schock reicht selten.
+- **Eine Eins nach dem 2. Wurf: Eins halten und nochmal offen würfeln**, statt aufzuhören (+0,2 bis 0,6 %-Pkt.
+  je Lage). Verdecken bringt gegen Stammtisch-Spieler nichts, weil sie nicht auf andere reagieren.
+- **Schwacher 1. Wurf ohne Eins (z. B. 6-5-3): stehen lassen**, statt alle neu zu würfeln. Dann haben
+  die anderen nur einen Wurf.
+
+Zu dritt (`python werkzeuge/analyse_konter.py --spieler 3`) gilt dasselbe Muster, teils noch stärker:
+- Schock im 1. oder 2. Wurf: weiter auf Schock Aus (bis +2,4 %-Pkt.), auch als Zweiter.
+- Eine Eins nach dem 2. Wurf: Eins halten und nochmal würfeln (bis +1,7 %-Pkt., z. B. bei 2-2-1, 3-2-1, 3-3-1).
+- Schwacher 1. Wurf mit einer Sechs (6-5-2, 6-4-3 …): stehen lassen (bis +1 %-Pkt.).
+
+**Spielt ihr am Stammtisch „idealerweise“?** Das hängt davon ab, wie die anderen spielen:
+- Gegen Leute, die auf das Spielgeschehen reagieren (beste Annahme: alle spielen perfekt, siehe 2-Spieler-Lösung),
+  ist „mit einer Eins nach dem 2. Wurf aufhören“ zu Spielbeginn richtig. Bei leerer Mitte ist es besser,
+  die Eins zu halten und verdeckt nachzuwerfen.
+- Gegen typische Stammtisch-Spieler, die nur den Schock jagen, ist **Weiterwürfeln** besser. Wer das
+  ausnutzt, verliert zu dritt nur noch 14 % statt 33 % der Spiele.
+
 ## Drei Spieler: beste Faustregel (Simulation)
 
 Suche über 1152 einfache Parameter-Strategien gegen zwei Faustregel-Spieler (je 50.000 Spiele,
