@@ -39,5 +39,11 @@
 - Terminal-Spiel, lokal; Mensch und Computer mischbar.
 - Hauptziel: sehr schnelle Computer-gegen-Computer-Simulation, um optimale Entscheidungen zu finden.
 
-## Offen
-- Bleibt der letzte Wurf verdeckt (Spätere wissen nicht, was Frühere haben), oder sieht jeder alle Ergebnisse?
+## Information (verdeckt/offen)
+- Der Startspieler legt mit seiner Wurfanzahl n (1, 2 oder 3) die Obergrenze für alle fest.
+- Er entscheidet außerdem, ob er seinen n-ten (letzten) Wurf verdeckt lässt. Die anderen kennen dann nur n, nicht sein Ergebnis.
+- Hat der Startspieler verdeckt, gilt für alle anderen: Würfe vor dem n-ten sind offen. Wer bis zum n-ten Wurf würfelt,
+  **muss** diesen verdeckt lassen (darf ihn nicht aufdecken). Das gilt genauso bei n = 1 und n = 2.
+- Wer vor der Grenze aufhört, hat ein offenes Ergebnis.
+- Aufgedeckt wird alles am Ende der Runde.
+- Annahme: Deckt der Startspieler auf, spielen alle offen.
