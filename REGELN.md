@@ -41,9 +41,17 @@
 
 ## Information (verdeckt/offen)
 - Der Startspieler legt mit seiner Wurfanzahl n (1, 2 oder 3) die Obergrenze für alle fest.
-- Er entscheidet außerdem, ob er seinen n-ten (letzten) Wurf verdeckt lässt. Die anderen kennen dann nur n, nicht sein Ergebnis.
-- Hat der Startspieler verdeckt, gilt für alle anderen: Würfe vor dem n-ten sind offen. Wer bis zum n-ten Wurf würfelt,
-  **muss** diesen verdeckt lassen (darf ihn nicht aufdecken). Das gilt genauso bei n = 1 und n = 2.
-- Wer vor der Grenze aufhört, hat ein offenes Ergebnis.
+- Er kann einen Wurf **stehen lassen** (Becher bleibt umgedreht). Ein stehen gelassener Wurf ist für **niemanden** sichtbar,
+  auch nicht für den Werfer selbst. Die Entscheidung fällt also nur aufgrund der Informationen vor dem Wurf.
+- Stehen lassen beendet den Zug. Vor dem 3. Wurf sagt der Startspieler an, dass er fertig ist. Dieser Wurf legt dann n fest.
+  Das geht auch schon beim 1. Wurf.
+- Unsichtbar sind nur die geworfenen Würfel. Vorher herausgelegte Würfel bleiben sichtbar.
+- Hat der Startspieler stehen lassen, gilt für alle anderen: Würfe vor dem n-ten sind offen. Wer bis zum n-ten Wurf würfelt,
+  **muss** diesen stehen lassen. Das gilt genauso bei n = 1 (alle lassen den ersten Wurf stehen) und n = 2.
+- Hat der Startspieler offen gespielt, spielen alle offen.
+- Annahme: Wer vor der Grenze aufhört, hat ein offenes Ergebnis.
 - Aufgedeckt wird alles am Ende der Runde.
-- Annahme: Deckt der Startspieler auf, spielen alle offen.
+
+### Folge für die Analyse
+Kein Spieler hat private Information, denn verdeckte Würfe sind für alle gleich unbekannt. Es gibt also nichts zu bluffen.
+Das Spiel lässt sich exakt durch Rückwärtsrechnung (Expectimax über die Verteilungen der verdeckten Würfe) lösen.
