@@ -194,8 +194,7 @@ def _pruefe(strategie, sicht, ist_starter, erzwungen=False) -> Aktion:
 
 @dataclass(frozen=True)
 class Regeln:
-    # Annahme: Reicht die Mitte nicht, kommt der Rest vom Gewinner der Runde.
-    rest_vom_gewinner: bool = True
+    """Platz für umschaltbare Hausregeln (derzeit keine)."""
 
 
 @dataclass
@@ -269,15 +268,15 @@ class Haelfte:
                     self.deckel[p] = 0
             self.deckel[tief] += self.mitte
             self.mitte = 0
+        elif self.mitte > 0:
+            # Solange die Mitte Deckel hat, kommt alles aus der Mitte (notfalls nur der Rest).
+            menge = min(r.hoch.wertung.deckel, self.mitte)
+            self.mitte -= menge
+            self.deckel[tief] += menge
         else:
-            menge = r.hoch.wertung.deckel
-            aus_mitte = min(menge, self.mitte)
-            self.mitte -= aus_mitte
-            self.deckel[tief] += aus_mitte
-            if self.regeln.rest_vom_gewinner:
-                vom_gewinner = min(menge - aus_mitte, self.deckel[hoch])
-                self.deckel[hoch] -= vom_gewinner
-                self.deckel[tief] += vom_gewinner
+            menge = min(r.hoch.wertung.deckel, self.deckel[hoch])
+            self.deckel[hoch] -= menge
+            self.deckel[tief] += menge
         r.deckel_bewegt = self.deckel[tief] - vorher
         assert self.mitte + sum(self.deckel.values()) == DECKEL_GESAMT
         if self.log:

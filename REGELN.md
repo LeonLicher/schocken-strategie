@@ -34,9 +34,9 @@
 ## Deckel
 - Zuerst aus der Mitte. Ist die Mitte leer, gibt der Gewinner der Runde.
 - Ist die Mitte leer, scheiden Spieler ohne Deckel für den Rest der Hälfte aus.
-- Annahme: Reicht die Mitte nicht (z. B. 2 übrig, 3 fällig), kommt der Rest vom Gewinner
-  (`Regeln.rest_vom_gewinner` in `schocken/engine.py`).
-- Annahme: Hälfte 2 beginnt der Verlierer von Hälfte 1, das Finale der Verlierer von Hälfte 2.
+- Reicht die Mitte nicht (z. B. 2 übrig, 3 fällig), bekommt der Verlierer nur den Rest aus der Mitte.
+  Erst wenn die Mitte leer ist, gibt der Gewinner (höchstens so viele, wie er hat).
+- Hälfte 2 beginnt der Verlierer von Hälfte 1, das Finale der Verlierer von Hälfte 2.
 
 ## Ziel der Umsetzung
 - Terminal-Spiel, lokal; Mensch und Computer mischbar.
@@ -52,7 +52,7 @@
 - Hat der Startspieler stehen lassen, gilt für alle anderen: Würfe vor dem n-ten sind offen. Wer bis zum n-ten Wurf würfelt,
   **muss** diesen stehen lassen. Das gilt genauso bei n = 1 (alle lassen den ersten Wurf stehen) und n = 2.
 - Hat der Startspieler offen gespielt, spielen alle offen.
-- Annahme: Wer vor der Grenze aufhört, hat ein offenes Ergebnis.
+- Wer vor der Grenze aufhört, hat ein offenes Ergebnis.
 - Aufgedeckt wird alles am Ende der Runde.
 
 ### Folge für die Analyse

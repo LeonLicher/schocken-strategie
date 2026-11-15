@@ -198,11 +198,23 @@ class TestHaelfte(unittest.TestCase):
         self.assertIsNone(self.spiele(h, runde(0, 1, (1, 1, 4))))
         self.assertEqual((h.deckel[1], h.mitte, h.starter), (4, 9, 1))
 
-    def test_rest_vom_gewinner(self):
+    def test_nur_rest_aus_der_mitte(self):
         h = self.haelfte()
         h.mitte, h.deckel = 2, {0: 5, 1: 6, 2: 0}
         self.spiele(h, runde(0, 2, (5, 5, 5)))
-        self.assertEqual((h.deckel, h.mitte), ({0: 4, 1: 6, 2: 3}, 0))
+        self.assertEqual((h.deckel, h.mitte), ({0: 5, 1: 6, 2: 2}, 0))
+
+    def test_vom_gewinner_wenn_mitte_leer(self):
+        h = self.haelfte()
+        h.mitte, h.deckel = 0, {0: 5, 1: 6, 2: 2}
+        self.spiele(h, runde(0, 2, (5, 5, 5)))
+        self.assertEqual(h.deckel, {0: 2, 1: 6, 2: 5})
+
+    def test_gewinner_gibt_hoechstens_was_er_hat(self):
+        h = self.haelfte()
+        h.mitte, h.deckel = 0, {0: 1, 1: 6, 2: 6}
+        self.spiele(h, runde(0, 2, (1, 1, 5)))
+        self.assertEqual(h.deckel, {0: 0, 1: 6, 2: 7})
 
     def test_ohne_deckel_ausgeschieden(self):
         h = self.haelfte()
