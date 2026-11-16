@@ -1,0 +1,90 @@
+# Rechnet die Lösungen in der Cloud (GitHub Actions, kostenlos für öffentliche Repos, 4 Kerne je Job).
+# Start: gh workflow run rechnen.yml --ref <branch>   Ergebnisse: gh run download <id>
+name: Rechnen
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NUMBA_NUM_THREADS: "4"
+  SCHOCKEN_PROZESSE: "4"
+  PYTHONIOENCODING: utf-8
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  konter2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install numpy numba
+      - name: Konter zu zweit lösen und per Simulation prüfen
+        run: |
+          python werkzeuge/loese_konter.py --spieler 2 | tee ergebnisse/log_konter2.txt
+          python werkzeuge/pruefe_konter.py --spieler 2 --spiele 2500 | tee -a ergebnisse/log_konter2.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: konter2
+          path: |
+            ergebnisse/konter2.pkl
+            ergebnisse/log_konter2.txt
+
+  weitere:
+    needs: konter2
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        aufgabe: [konter3, mehr4, mehr5, mehr6]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install numpy numba
+      - uses: actions/download-artifact@v4
+        with:
+          name: konter2
+          path: ergebnisse
+      - name: Lösen und per Simulation prüfen
+        run: |
+          case "${{ matrix.aufgabe }}" in
+            konter3) python werkzeuge/loese_konter.py --spieler 3
+                     python werkzeuge/pruefe_konter.py --spieler 3 --spiele 2000 ;;
+            mehr4)   python werkzeuge/loese_mehr.py --spieler 4 --spiele 400 ;;
+            mehr5)   python werkzeuge/loese_mehr.py --spieler 5 --spiele 200 ;;
+            mehr6)   python werkzeuge/loese_mehr.py --spieler 6 --spiele 125 ;;
+          esac 2>&1 | tee ergebnisse/log_${{ matrix.aufgabe }}.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.aufgabe }}
+          path: |
+            ergebnisse/konter3.pkl
+            ergebnisse/stammtischwerte*.pkl
+            ergebnisse/log_*.txt
+          if-no-files-found: ignore
+
+  faustregel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install numpy numba
+      - name: Parametersuche gegen Faustregel und Optimal gegen Faustregel
+        run: |
+          python werkzeuge/parametersuche.py --spieler 3 2>&1 | tee ergebnisse/log_faustregel.txt
+          python werkzeuge/pruefe_optimal2.py 2>&1 | tee -a ergebnisse/log_faustregel.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: faustregel
+          path: ergebnisse/log_faustregel.txt
