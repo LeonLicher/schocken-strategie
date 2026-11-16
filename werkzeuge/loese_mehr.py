@@ -16,6 +16,7 @@ from pathlib import Path
 import numpy as np
 
 os.environ.setdefault("NUMBA_NUM_THREADS", "1")
+PROZESSE = int(os.environ.get("SCHOCKEN_PROZESSE", "2"))  # lokal schonend 2, in der Cloud mehr
 
 
 def _niedrig():
@@ -64,9 +65,9 @@ def main():
           f"Alle Stammtisch (Konter nur im Finale): ich verliere {v0:.4f}", flush=True)
     if a.spiele:
         t = time.time()
-        with Pool(2, initializer=_niedrig) as pool:
-            verloren = sum(pool.map(lauf, [(n, 50 + k, a.spiele) for k in range(2)]))
-        m = 2 * a.spiele
+        with Pool(PROZESSE, initializer=_niedrig) as pool:
+            verloren = sum(pool.map(lauf, [(n, 50 + k, a.spiele) for k in range(PROZESSE)]))
+        m = PROZESSE * a.spiele
         q = verloren / m
         print(f"Konter-Näherung gegen {n - 1}x Stammtisch: verliert {q:.4f} +- {1.96 * np.sqrt(q * (1 - q) / m):.4f} "
               f"({m} Spiele, {time.time() - t:.0f}s); fair wäre {1 / n:.4f}")

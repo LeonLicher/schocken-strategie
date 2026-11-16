@@ -45,15 +45,15 @@ for (const t of ["haelfteStart", "rundeStart", "wurf", "aktion", "zugEnde", "run
   if (!typen.has(t)) { fehler++; console.log("Ereignis fehlt:", t); }
 }
 
-// 2) Konter gegen 2x Stammtisch: Verlustquote wie in Python (14,0 %)
+// 2) Konter gegen 2x Stammtisch: Verlustquote wie in Python (14,4 %)
 const n = 400;  // genügt, um grobe Fehler zu erkennen; genaue Prüfung macht werkzeuge/pruefe_konter.py
 let verloren = 0;
 for (let i = 0; i < n; i++) {
   const e = await spieleSpiel([new Konter(L), new Stammtisch(), new Stammtisch()], rng(1000 + i), null, i % 3);
   if (e.verlierer === 0) verloren++;
 }
-const q = verloren / n, se = Math.sqrt(0.14 * 0.86 / n);
-console.log(`Konter verliert ${(q * 100).toFixed(1)} % (Python: 14,0 %, Abweichung ${((q - 0.14) / se).toFixed(2)} SE)`);
-if (Math.abs(q - 0.14) > 4 * se) fehler++;
+const q = verloren / n, se = Math.sqrt(0.144 * 0.856 / n);
+console.log(`Konter verliert ${(q * 100).toFixed(1)} % (Python: 14,4 %, Abweichung ${((q - 0.144) / se).toFixed(2)} SE)`);
+if (Math.abs(q - 0.144) > 4 * se) fehler++;
 console.log(fehler ? `${fehler} Fehler` : "alles in Ordnung");
 process.exit(fehler ? 1 : 0);

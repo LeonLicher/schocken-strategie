@@ -1,10 +1,13 @@
 """Konter: beste Antwort auf Stammtisch-Gegner (exakt, 2 und 3 Spieler).
 
 Ich bin Sitz 0, alle anderen spielen nach `bots.stammtisch_entscheidung`. Diese Gegner schauen nicht auf
-die Ergebnisse der anderen und verdecken nie. Ihr Endergebnis hängt deshalb nur von der Wurfgrenze ab:
+die Ergebnisse der anderen. Ihr Endergebnis hängt deshalb nur von der Wurfgrenze ab:
   S[w, k]     Verteilung des Endergebnisses eines Stammtisch-Startspielers
   F[L, w, k]  Verteilung eines Stammtisch-Folgespielers bei Wurfgrenze L
-(Ein erzwungen verdeckter letzter Wurf ändert daran nichts, weil danach nicht mehr entschieden wird.)
+Ein Stammtisch-Startspieler wirft einen dritten Wurf verdeckt (wie am Tisch üblich). Dann sehen die
+anderen nur seine gehaltenen Würfel h (S_VERDECKT[h]) und müssen ihren letzten Wurf ebenfalls verdeckt werfen
+(F3_VERDECKT[h] = gehaltene Würfel eines Folgespielers vor seinem verdeckten dritten Wurf). Die Verteilungen
+S und F ändert das nicht, weil Stammtisch-Spieler nicht auf andere reagieren.
 
 Wertiteration über alle Spielstände (Hälfte 1, Hälfte 2, Finale) wie in loeser.py. Im Zustand wird
 meine Verlustwahrscheinlichkeit V gespeichert; in jeder Runde spiele ich per zug_dp optimal.
@@ -29,11 +32,16 @@ ERGEBNISSE = Path(__file__).resolve().parent.parent / "ergebnisse"
 # --------------------------------------------------------------------------- Stammtisch-Verteilungen
 
 
-def stammtisch_verteilung(grenze, ist_starter):
-    """Exakte Verteilung des Endergebnisses (w, k) eines Stammtisch-Spielers."""
+def stammtisch_verteilung(grenze, ist_starter, vor_letztem=False):
+    """Exakte Verteilung des Endergebnisses (w, k) eines Stammtisch-Spielers.
+    vor_letztem=True: zusätzlich Verteilung der gehaltenen Würfel vor dem letzten Wurf (Index H_ID)."""
     P = np.zeros((W, 4))
+    H = np.zeros(NH)
     front = {(): 1.0}
     for k in range(1, grenze + 1):
+        if k == grenze and grenze > 1:
+            for gehalten, ph in front.items():
+                H[H_ID[tuple(sorted(gehalten))]] += ph
         neu_front = defaultdict(float)
         for gehalten, ph in front.items():
             r = 3 - len(gehalten)
@@ -50,13 +58,21 @@ def stammtisch_verteilung(grenze, ist_starter):
                 else:
                     neu_front[tuple(sorted(e[0] + (1,) * e[1]))] += p
         front = neu_front
-    return P
+    return (P, H) if vor_letztem else P
 
 
-S_START = stammtisch_verteilung(3, True)
+STARTER_DRITTER_VERDECKT = True  # Stammtisch-Startspieler wirft einen dritten Wurf verdeckt
+S_START, _SH = stammtisch_verteilung(3, True, True)
 F_FOLGER = np.zeros((4, W, 4))
 for _L in (1, 2, 3):
     F_FOLGER[_L] = stammtisch_verteilung(_L, False)
+_, F3_VERDECKT = stammtisch_verteilung(3, False, True)
+if STARTER_DRITTER_VERDECKT:
+    S_OFFEN = S_START.copy()
+    S_OFFEN[:, 3] = 0.0           # offen enden nur Züge mit 1 oder 2 Würfen
+    S_VERDECKT = _SH              # sonst: verdeckt mit gehaltenen Würfeln h
+else:
+    S_OFFEN, S_VERDECKT = S_START, np.zeros(NH)
 
 # --------------------------------------------------------------------------- Runden-Kerne (numba)
 
@@ -158,8 +174,8 @@ def wert_ohne_mich(n, seats, S, F, Vnext):
 
 
 @njit(cache=True)
-def wert_als_zweiter_von_drei(seats, S, F, Vnext):
-    """n = 3, ich an Position 1: Startspieler bekannt, Spieler an Position 2 zufällig."""
+def wert_als_zweiter_von_drei(seats, S, SV, F, Vnext):
+    """n = 3, ich an Position 1: Startspieler bekannt (offen S) oder verdeckt (SV), Spieler an Position 2 zufällig."""
     tot = 0.0
     D = np.zeros((3, W, 4))
     Uv = np.zeros((NH, 4))
@@ -179,7 +195,94 @@ def wert_als_zweiter_von_drei(seats, S, F, Vnext):
                     Uo[w, k] = -erwartung(3, seats, D, Vnext)
             wert, _, _ = zug_dp(Uo, Uv, k1, False, False)
             tot += p1 * (-wert)
+    # Startspieler hat verdeckt zum dritten Mal geworfen: ich sehe nur h1 und werfe selbst zuletzt verdeckt
+    D[2] = F[3]
+    for h1 in range(NH):
+        p1 = SV[h1]
+        if p1 == 0.0:
+            continue
+        D[0, :, :] = 0.0
+        D[0, :, 3] = P_VERDECKT[h1]
+        Uo = np.zeros((W, 4))
+        Uv = np.zeros((NH, 4))
+        for k in range(1, 4):
+            for w in range(W):
+                D[1, :, :] = 0.0
+                D[1, w, k] = 1.0
+                Uo[w, k] = -erwartung(3, seats, D, Vnext)
+        for h in range(NH):
+            x = 0.0
+            for w in range(W):
+                x += P_VERDECKT[h, w] * Uo[w, 3]
+            Uv[h, 3] = x
+        wert, _, _ = zug_dp(Uo, Uv, 3, False, True)
+        tot += p1 * (-wert)
     return tot
+
+
+@njit(cache=True, parallel=True)
+def wert_letzter_verdeckt(n, seats, SV, F, FV3, Vnext):
+    """Ich bin der letzte von n (2 oder 3), der Startspieler hat verdeckt zum dritten Mal geworfen (sichtbar h1).
+    Ein Stammtisch-Spieler zwischen uns endet offen nach 1-2 Würfen oder verdeckt (gehalten h2) im dritten."""
+    # Vorgeschichten: (h1, art2, x2, k2, p); art2 0 = offen (w2, k2), 1 = verdeckt (h2), -1 = kein Mittlerer
+    anz = 0
+    for h1 in range(NH):
+        if SV[h1] > 0.0:
+            if n == 2:
+                anz += 1
+            else:
+                for k2 in range(1, 3):
+                    for w2 in range(W):
+                        if F[3, w2, k2] > 0.0:
+                            anz += 1
+                for h2 in range(NH):
+                    if FV3[h2] > 0.0:
+                        anz += 1
+    gh1 = np.zeros(anz, dtype=np.int64)
+    art = np.full(anz, -1, dtype=np.int64)
+    gx2 = np.zeros(anz, dtype=np.int64)
+    gk2 = np.zeros(anz, dtype=np.int64)
+    gp = np.zeros(anz)
+    c = 0
+    for h1 in range(NH):
+        if SV[h1] > 0.0:
+            if n == 2:
+                gh1[c], gp[c] = h1, SV[h1]
+                c += 1
+            else:
+                for k2 in range(1, 3):
+                    for w2 in range(W):
+                        if F[3, w2, k2] > 0.0:
+                            gh1[c], art[c], gx2[c], gk2[c], gp[c] = h1, 0, w2, k2, SV[h1] * F[3, w2, k2]
+                            c += 1
+                for h2 in range(NH):
+                    if FV3[h2] > 0.0:
+                        gh1[c], art[c], gx2[c], gk2[c], gp[c] = h1, 1, h2, 3, SV[h1] * FV3[h2]
+                        c += 1
+    beitraege = np.zeros(anz)
+    for i in prange(anz):
+        D = np.zeros((3, W, 4))
+        D[0, :, 3] = P_VERDECKT[gh1[i]]
+        if n == 3:
+            if art[i] == 0:
+                D[1, gx2[i], gk2[i]] = 1.0
+            else:
+                D[1, :, 3] = P_VERDECKT[gx2[i]]
+        Uo = np.zeros((W, 4))
+        Uv = np.zeros((NH, 4))
+        for k in range(1, 4):
+            for w in range(W):
+                D[n - 1, :, :] = 0.0
+                D[n - 1, w, k] = 1.0
+                Uo[w, k] = -erwartung(n, seats, D, Vnext)
+        for h in range(NH):
+            x = 0.0
+            for w in range(W):
+                x += P_VERDECKT[h, w] * Uo[w, 3]
+            Uv[h, 3] = x
+        wert, _, _ = zug_dp(Uo, Uv, 3, False, True)
+        beitraege[i] = gp[i] * (-wert)
+    return beitraege.sum()
 
 
 @njit(cache=True, parallel=True)
@@ -270,8 +373,9 @@ def wert_runde(n, seats, p):
     if p == 0:
         return lambda V: wert_als_starter(n, seats, F_FOLGER, V)
     if p == n - 1:
-        return lambda V: wert_als_letzter(n, seats, S_START, F_FOLGER, V)
-    return lambda V: wert_als_zweiter_von_drei(seats, S_START, F_FOLGER, V)
+        return lambda V: (wert_als_letzter(n, seats, S_OFFEN, F_FOLGER, V)
+                          + wert_letzter_verdeckt(n, seats, S_VERDECKT, F_FOLGER, F3_VERDECKT, V))
+    return lambda V: wert_als_zweiter_von_drei(seats, S_OFFEN, S_VERDECKT, F_FOLGER, V)
 
 
 # --------------------------------------------------------------------------- Spielstände und Wertiteration

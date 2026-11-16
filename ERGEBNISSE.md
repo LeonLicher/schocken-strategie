@@ -17,7 +17,7 @@ Der Spielbeginner verliert 48,85 % ± 0,49 %, berechnet sind 49,09 %.
 |---|---|
 | Spielbeginner verliert das Spiel (beide optimal) | 49,09 % |
 | Startspieler des Finales verliert das Finale | 48,19 % |
-| Optimal gegen Faustregel: Optimal verliert | 30,9 % ± 0,5 % |
+| Optimal gegen Faustregel: Optimal verliert | 31,8 % ± 0,8 % |
 
 Finale, Mitte leer (es beginnt, wer mehr Deckel hat), meine Verlustwahrscheinlichkeit bei x eigenen
 Deckeln: 1: 27 %, 3: 38 %, 6: 50 %, 7: 50 %, 9: 58 %, 12: 73 %.
@@ -68,24 +68,33 @@ schwache Würfel: Eins halten, verdeckt nachwerfen (bis 1 %-Pkt. besser).
 
 **Stammtisch-Spielweise** (Modell, `bots.stammtisch_entscheidung`): Sonderwürfe (Straße, General, Schock)
 bleiben stehen. Der Startspieler hört ab dem 2. Wurf mit einer Eins auf, ohne Eins wirft er alle drei neu.
-Alle anderen halten Einsen und jagen den Schock, ohne auf die anderen zu achten. Sechsen werden gedreht,
-verdeckt wird nie.
+Alle anderen halten Einsen und jagen den Schock, ohne auf die anderen zu achten. Sechsen werden gedreht.
+Wirft der Startspieler ein drittes Mal, dann **verdeckt** (wie am Tisch üblich); die anderen müssen ihren
+letzten Wurf dann ebenfalls verdeckt werfen. (Bis 2026-11-16 war das Modell „verdeckt wird nie“; Konter
+verlor damit zu zweit 26,0 %, zu dritt 14,0 %.)
 
 **Konter** ist die exakt berechnete beste Antwort darauf (`python werkzeuge/loese_konter.py`).
 Weil Stammtisch-Spieler nicht auf andere reagieren, ist das viel einfacher zu rechnen als das echte Optimum.
 
 | Spieler am Tisch | Konter verliert | fair wäre | geprüft per Simulation |
 |---|---|---|---|
-| 2 | **26,0 %** | 50 % | 26,2 % ± 0,9 % (10.000 Spiele) |
-| 3 | **14,0 %** | 33,3 % | 14,0 % ± 0,8 % (8.000 Spiele) |
-| 4 | **8,6 %** (Näherung) | 25 % | 8,6 % ± 1,4 % (1.600 Spiele) |
-| 5 | **6,3 %** (Näherung) | 20 % | 6,3 % ± 1,7 % (800 Spiele) |
-| 6 | **4,2 %** (Näherung) | 16,7 % | 4,2 % ± 1,8 % (500 Spiele) |
+| 2 | **26,3 %** | 50 % | 26,7 % ± 0,9 % (10.000 Spiele) |
+| 3 | **14,4 %** | 33,3 % | 14,2 % ± 0,8 % (8.000 Spiele) |
+| 4 | **9,9 %** (Näherung, simuliert) | 25 % | 9,9 % ± 1,5 % (1.600 Spiele) |
+| 5 | **7,8 %** (Näherung, simuliert) | 20 % | 7,8 % ± 1,9 % (800 Spiele) |
+| 6 | **4,8 %** (Näherung, simuliert) | 16,7 % | 4,8 % ± 1,9 % (500 Spiele) |
+
+Ab 4 Spielern sind die Zahlen reine Simulationswerte mit großer Unsicherheit; im alten Modell (ohne Verdecken)
+waren es 8,6 / 6,3 / 4,2 %. Gerechnet in der Cloud (GitHub Actions, Workflow „Rechnen“, rund 30 Minuten).
 
 Ab 4 Spielern ist Konter eine Näherung (`schocken/mehr.py`, `python werkzeuge/loese_mehr.py --spieler N`):
 Jede Runde wird exakt entschieden, spätere Runden werden so bewertet, als spiele man dort selbst wie der
-Stammtisch (im Finale exakter Konter). Zu dritt, wo es die exakte Lösung gibt, kommt die Näherung auf
-14,4 % ± 1,3 %, also praktisch gleich gut wie exakt (14,0 %).
+Stammtisch (im Finale exakter Konter). Zu dritt, wo es die exakte Lösung gibt, war die Näherung praktisch
+gleich gut wie exakt (14,4 % ± 1,3 % gegen 14,0 %, altes Modell).
+
+Der verdeckte dritte Wurf des Stammtisch-Startspielers kostet Konter nur wenig (zu zweit +0,3, zu dritt
++0,4 %-Pkt.): Konter sieht dann das Ergebnis des Startspielers nicht und muss selbst blind zu Ende werfen.
+Die Strategie als Startspieler bleibt gleich, weil Stammtisch-Spieler ohnehin nicht auf andere reagieren.
 
 Was Konter zu zweit anders macht (Startspieler, Spielbeginn; `python werkzeuge/analyse_konter.py --spieler 2`):
 - **Schock (1-1-x) im 1. oder 2. Wurf nicht stehen lassen**, sondern die Einsen halten und weiter auf
@@ -121,8 +130,8 @@ mit Blick auf beide; jeder will selbst möglichst selten verlieren. Das Finale i
 | Dritter | 33,7 % |
 
 **Geprüft:** Browser-Nachbau gegen Python (Abweichung unter 10⁻⁷); 1.500 simulierte Spiele Optimal gegen
-Optimal: Spielbeginner verliert 32,9 % ± 1,2 %. **Optimal gegen zwei Stammtisch-Spieler verliert nur 13,9 %**
-(1.500 Spiele), praktisch so wenig wie Konter (14,0 %), obwohl Optimal die Stammtisch-Spielweise nicht kennt.
+Optimal: Spielbeginner verliert 32,9 % ± 1,2 %. **Optimal gegen zwei Stammtisch-Spieler verliert nur 14,1 % ± 0,9 %**
+(1.500 Spiele), praktisch so wenig wie Konter (14,4 %), obwohl Optimal die Stammtisch-Spielweise nicht kennt.
 
 Was der Startspieler zu Spielbeginn anders macht als zu zweit:
 - **2. Wurf, eine Eins plus schwache Würfel** (2-2-1, 3-3-1, 4-2-1, 5-4-1, 5-5-1 …): Eins halten und
@@ -142,12 +151,19 @@ vorberechneten Tabellen (`python werkzeuge/export_optimum3.py`), die anderen rec
 Suche über 1152 einfache Parameter-Strategien gegen zwei Faustregel-Spieler (je 50.000 Spiele,
 Top 15 nachgemessen mit 2 Mio. Spielen; `python werkzeuge/parametersuche.py`).
 
+Faustregel-Spieler: Startspieler hört ab einer Straße auf und wirft einen dritten Wurf verdeckt; die anderen
+hören auf, sobald sie besser als der schlechteste offene Wurf vor ihnen sind (ohne offenen Wurf: ab einer
+Straße). Sechsen werden gedreht. (Gerechnet in der Cloud, Workflow „Rechnen“.)
+
 - Faustregel gegen Faustregel: 33,3 % (fair).
-- Beste gefundene Regel: **31,6 %**. Der Startspieler würfelt alle drei Würfe (außer bei Schock Aus).
-  Die anderen hören erst auf, wenn ihr Wurf deutlich über dem schlechtesten offenen Wurf liegt.
-  Sechsen werden immer gedreht.
-- Schlechteste Regeln (ohne Drehen): 54,6–54,8 %.
-- Pauschales Verdecken hilft in dieser einfachen Strategie-Familie nicht. Die exakte 2-Spieler-Lösung
-  zeigt aber: Gezielt eingesetzt ist Verdecken sehr wertvoll.
+- Beste gefundene Regel: **28,7 %** (altes Modell ohne Verdecken: 31,6 %). Der Startspieler würfelt alle
+  drei Würfe **offen** (außer bei Schock Aus). Die anderen hören auf, sobald sie über dem schlechtesten
+  offenen Wurf liegen; liegt vor ihnen kein offener Wurf, jagen sie bis Schock Aus. Sechsen immer drehen.
+- Mit verdecktem drittem Wurf sind Faustregel-Spieler leichter auszunutzen (28,7 statt 31,6 %). Vermutlicher
+  Grund: Ohne offenen Wurf vor sich hören Faustregel-Folgespieler schon ab einer Straße auf, die beste
+  Antwort würfelt in dieser Lage bis Schock Aus weiter.
+- Schlechteste Regeln (ohne Drehen): rund 76 %.
+- Pauschales Verdecken hilft in dieser einfachen Strategie-Familie nicht. Die exakte Lösung zeigt aber:
+  Gezielt eingesetzt ist Verdecken sehr wertvoll.
 
 Die 3-Spieler-Ergebnisse sind nur eine beste Antwort auf Faustregel-Gegner, keine exakte Lösung.

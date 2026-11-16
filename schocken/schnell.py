@@ -20,7 +20,7 @@ from .wertung import DECKEL_GESAMT, bewerte
 STARTER_KLASSE, VERDECKT_WURF, FOLGER_KLASSE, FOLGER_MARGE, DREHEN = range(5)
 N_PARAMS = 5
 
-FAUSTREGEL = np.array([1, 0, 1, 0, 1], dtype=np.int64)
+FAUSTREGEL = np.array([1, 3, 1, 0, 1], dtype=np.int64)  # wie bots.FAUSTREGEL_PARAMS
 
 # Tabellen über alle 216 geordneten Würfe: code = (a-1)*36 + (b-1)*6 + (c-1)
 RANG = np.zeros((216, 2), dtype=np.int64)
