@@ -26,6 +26,8 @@ jobs:
         run: node tests/js/vergleich.mjs
       - name: Komplette Spiele mit allen Bots
         run: node tests/js/spiel.mjs
+      - name: Optimum zu dritt wie in Python
+        run: node tests/js/optimal3.mjs
 
   veroeffentlichen:
     needs: pruefen

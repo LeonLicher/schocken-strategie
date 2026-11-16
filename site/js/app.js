@@ -3,6 +3,7 @@ import { spieleSpiel, legaleAktionen, gleicheAktion } from "./regeln.js";
 import { Spiel2 } from "./loeser.js";
 import { Stammtisch, Faustregel, Optimal2, KonterLoesung, optionen } from "./bots.js";
 import { KonterNaeherung, Stammtischwerte } from "./mehr.js";
+import { Gleichgewicht3, Optimal3 } from "./optimal3.js";
 
 const BOT_NAMEN = { stammtisch: "Stammtisch", konter: "Konter", optimal: "Optimal", faustregel: "Faustregel" };
 const BERATER_NAMEN = { optimal: "Optimal (alle spielen perfekt)", konter: "Konter (Gegner spielen Stammtisch)" };
@@ -28,7 +29,7 @@ const ZEITEN = {
 let tippsAn = lies("tipps", "1") === "1";
 
 // ------------------------------------------------------------------ Lösungsdaten
-const DATEN = { spiel2: null, konter: {}, werte: {}, index: { konter: [], stammtisch: [] } };
+const DATEN = { spiel2: null, konter: {}, werte: {}, g3: null, index: { konter: [], stammtisch: [], optimum: [] } };
 async function ladeDaten() {
   const json = async p => { const r = await fetch(p); if (!r.ok) throw new Error(p); return r.json(); };
   DATEN.index = await json("daten/index.json");
@@ -44,13 +45,22 @@ async function ladeWerte(n) {
   DATEN.werte[n] = new Stammtischwerte(n, new Float32Array(await r.arrayBuffer()), DATEN.konter[2]);
 }
 
+// Optimum zu dritt erst bei Bedarf laden (rund 4 MB)
+async function ladeOptimum3() {
+  if (DATEN.g3) return;
+  const [j, b] = await Promise.all([fetch("daten/optimum3.json"), fetch("daten/optimum3_start.bin")]);
+  if (!j.ok || !b.ok) throw new Error("daten/optimum3");
+  DATEN.g3 = new Gleichgewicht3(await j.json(), new Float32Array(await b.arrayBuffer()));
+}
+
 function verfuegbar(n) {
   const bots = ["stammtisch", "faustregel"], berater = [];
-  if (n === 2) { bots.push("optimal"); berater.push("optimal"); }
+  if (n === 2 || (DATEN.index.optimum || []).includes(n)) { bots.push("optimal"); berater.push("optimal"); }
   if (DATEN.konter[n] || DATEN.index.stammtisch.includes(n)) { bots.push("konter"); berater.push("konter"); }
   return { bots, berater };
 }
 const neuerKonter = () => new KonterNaeherung(DATEN.werte, DATEN.konter);
+const neuesOptimal = () => (DATEN.g3 ? new Optimal3(DATEN.g3, DATEN.spiel2) : new Optimal2(DATEN.spiel2));
 
 // ------------------------------------------------------------------ Texte
 function aktionText(a, phase, du = true) {
@@ -76,14 +86,14 @@ class Sitzung {
     this.ereignisse = [];
     this.offen = null;
     this.beendet = false;
-    this.berater = berater === "optimal" ? new Optimal2(DATEN.spiel2) : berater === "konter" ? neuerKonter() : null;
+    this.berater = berater === "optimal" ? neuesOptimal() : berater === "konter" ? neuerKonter() : null;
     const sitzung = this;
     const langsam = bot => ({ name: bot.name, async entscheide(s) { await new Promise(r => setTimeout(r, 0)); return bot.entscheide(s); } });
     this.strategien = typen.map(t => {
       if (t === "mensch") return { name: "Du", entscheide: s => sitzung.frage(s) };
       if (t === "stammtisch") return langsam(new Stammtisch());
       if (t === "faustregel") return langsam(new Faustregel());
-      if (t === "optimal") return langsam(new Optimal2(DATEN.spiel2));
+      if (t === "optimal") return langsam(neuesOptimal());
       return langsam(neuerKonter());
     });
     const zaehler = {};
@@ -194,6 +204,11 @@ async function starte() {
   if (typen.includes("konter") || berater === "konter") {
     $("start-meldung").textContent = "Lade Konter-Daten …";
     try { await ladeWerte(anzahl); } catch (e) { $("start-meldung").textContent = "Konter-Daten fehlen: " + e.message; return; }
+    $("start-meldung").textContent = "";
+  }
+  if (anzahl === 3 && (typen.includes("optimal") || berater === "optimal")) {
+    $("start-meldung").textContent = "Lade Optimum-Daten …";
+    try { await ladeOptimum3(); } catch (e) { $("start-meldung").textContent = "Optimum-Daten fehlen: " + e.message; return; }
     $("start-meldung").textContent = "";
   }
   if (SITZUNG) SITZUNG.beendet = true;

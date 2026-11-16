@@ -115,7 +115,7 @@ def export_stammtischwerte(n):
 def main():
     DATEN.mkdir(parents=True, exist_ok=True)
     (DATEN / "loesung2.json").write_text(json.dumps(export_loesung2(), separators=(",", ":")), encoding="utf-8")
-    index = {"konter": [], "stammtisch": []}
+    index = {"konter": [], "stammtisch": [], "optimum": []}
     for n in (2, 3):
         if konter_datei(n).exists():
             (DATEN / f"konter{n}.json").write_text(json.dumps(export_konter(n), separators=(",", ":")), encoding="utf-8")
@@ -124,6 +124,8 @@ def main():
         if werte_datei(n).exists():
             (DATEN / f"stammtisch{n}.bin").write_bytes(export_stammtischwerte(n))
             index["stammtisch"].append(n)
+    # Optimum zu dritt: eigenes Skript (werkzeuge/export_optimum3.py), hier nur eintragen, wenn vorhanden
+    index["optimum"] = [3] if (DATEN / "optimum3.json").exists() and (DATEN / "optimum3_start.bin").exists() else []
     (DATEN / "index.json").write_text(json.dumps(index), encoding="utf-8")
     for f in sorted(DATEN.iterdir()):
         print(f"{f.name}: {f.stat().st_size // 1024} KB")

@@ -1,6 +1,6 @@
 # Ergebnisse
 
-Stand 2026-11-15. Regeln: [REGELN.md](REGELN.md) (inkl. „bei leerer Mitte beginnt, wer die meisten
+Stand 2026-11-16. Regeln: [REGELN.md](REGELN.md) (inkl. „bei leerer Mitte beginnt, wer die meisten
 Deckel hat“).
 
 ## Zu zweit: exakt gelöst
@@ -106,6 +106,36 @@ Zu dritt (`python werkzeuge/analyse_konter.py --spieler 3`) gilt dasselbe Muster
   die Eins zu halten und verdeckt nachzuwerfen.
 - Gegen typische Stammtisch-Spieler, die nur den Schock jagen, ist **Weiterwürfeln** besser. Wer das
   ausnutzt, verliert zu dritt nur noch 14 % statt 33 % der Spiele.
+
+## Zu dritt: echtes Optimum (alle spielen perfekt)
+
+Teilspielperfektes Gleichgewicht über alle Spielstände beider Hälften (`schocken/gleichgewicht.py`,
+`python werkzeuge/loese_optimum3.py`, knapp 3 Stunden mit 2 Kernen). In jeder Runde antwortet der letzte
+Spieler optimal auf alles vor ihm, der mittlere optimal mit Blick auf diese Antwort, der Startspieler optimal
+mit Blick auf beide; jeder will selbst möglichst selten verlieren. Das Finale ist die 2-Spieler-Lösung.
+
+| Spieler (Reihenfolge zu Spielbeginn) | verliert das Spiel |
+|---|---|
+| Spielbeginner | **32,5 %** |
+| Zweiter | 33,8 % |
+| Dritter | 33,7 % |
+
+**Geprüft:** Browser-Nachbau gegen Python (Abweichung unter 10⁻⁷); 1.500 simulierte Spiele Optimal gegen
+Optimal: Spielbeginner verliert 32,9 % ± 1,2 %. **Optimal gegen zwei Stammtisch-Spieler verliert nur 13,9 %**
+(1.500 Spiele), praktisch so wenig wie Konter (14,0 %), obwohl Optimal die Stammtisch-Spielweise nicht kennt.
+
+Was der Startspieler zu Spielbeginn anders macht als zu zweit:
+- **2. Wurf, eine Eins plus schwache Würfel** (2-2-1, 3-3-1, 4-2-1, 5-4-1, 5-5-1 …): Eins halten und
+  **verdeckt** nachwerfen (zu zweit: aufhören). Nur mit einer Sechs dabei (6-2-1 bis 6-5-1) stehen lassen.
+- **1. Wurf 3-2-1 (Straße)**: stehen lassen (zu zweit: Eins halten).
+- **1. Wurf 3-2-2, 4-2-2, 3-3-2**: alle drei neu (zu zweit: stehen lassen). Zu zweit hat der Gegner nur einen
+  Wurf; zu dritt reicht ein so schwacher Wurf gegen zwei Gegner selten.
+- **1. Wurf 6-6-3, 6-6-4, 6-6-5**: stehen lassen statt Sechsen zu drehen.
+- Gleich wie zu zweit: Schock im 1. Wurf weiter auf Schock Aus, im 2. Wurf die Einsen halten und verdeckt
+  nachwerfen; vor dem 1. Wurf offen würfeln.
+
+Auf der Website als Gegner und als Berater „Optimal“ für 3 Spieler. Der Startspieler entscheidet aus
+vorberechneten Tabellen (`python werkzeuge/export_optimum3.py`), die anderen rechnet der Browser live.
 
 ## Drei Spieler: beste Faustregel (Simulation)
 

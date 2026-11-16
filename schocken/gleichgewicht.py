@@ -225,11 +225,17 @@ def _mitte(t, z, Vnext):
 
 
 @njit(cache=True, parallel=True)
-def runde3(z, Vnext):
-    """Wertvektor einer Runde zu dritt (Sitze z[0..2] in Spielreihenfolge)."""
+def starter_q(z, Vnext):
+    """Q[t] = Wertvektor, wenn der Startspieler mit Zug-Ende t aufhört (danach spielen alle perfekt)."""
     Q = np.zeros((N_T1, N))
     for t in prange(N_T1):
         Q[t] = _mitte(t, z, Vnext)
+    return Q
+
+
+def runde3(z, Vnext):
+    """Wertvektor einer Runde zu dritt (Sitze z[0..2] in Spielreihenfolge)."""
+    Q = starter_q(z, Vnext)
     E_o = np.zeros((W, 4, N))
     E_v = np.zeros((NH, 4, N))
     for t in range(N_T1):
