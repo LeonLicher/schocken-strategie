@@ -17,6 +17,7 @@
   --accent: #e2a23d; --rot: #e0624d; --gruen: #49b07a; --wuerfel: #f3f1ea; --pip: #16201b; color-scheme: dark }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
 .seite { max-width: 1100px; margin: 0 auto; padding: 16px max(16px, env(safe-area-inset-right, 0px)) 120px max(16px, env(safe-area-inset-left, 0px));
   display: flex; flex-direction: column; gap: 16px; }
@@ -104,3 +105,66 @@ select { font: inherit; padding: 6px 8px; border-radius: 6px; border: 1px solid 
 .ende table { border-collapse: collapse; font-size: 0.9rem; width: 100%; }
 .ende td, .ende th { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .tabelle-box { overflow-x: auto; }
+
+/* ---------------------------------------------------------------- Würfel kullern (beide Ansichten) */
+.rollt { display: inline-block; animation: rollen var(--roll, 500ms) cubic-bezier(.2,.8,.3,1.1) both; }
+.rollt:nth-child(2) { animation-delay: 60ms; }
+.rollt:nth-child(3) { animation-delay: 120ms; }
+@keyframes rollen {
+  0% { transform: translate(-14px, -10px) rotate(-260deg) scale(.55); opacity: 0; }
+  55% { transform: translate(3px, 2px) rotate(25deg) scale(1.08); opacity: 1; }
+  80% { transform: translate(-1px, 0) rotate(-8deg); }
+  100% { transform: none; opacity: 1; }
+}
+
+/* ---------------------------------------------------------------- Ansicht "Am Tisch" */
+.tisch-real { display: flex; justify-content: center; }
+.rund { position: relative; width: 100%; max-width: 900px; aspect-ratio: 1.45 / 1; }
+.rund::before { content: ""; position: absolute; inset: 9% 7%; border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 35%, var(--filz-2), var(--filz) 70%);
+  box-shadow: 0 0 0 10px #5a3a22, 0 0 0 13px #3e2717, 0 14px 30px rgba(0,0,0,.35); }
+@media (max-width: 640px) { .rund { aspect-ratio: 0.8 / 1; } .rund::before { inset: 11% 4%; } }
+.tisch-mitte { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 34%;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; color: var(--filz-fg); }
+.tisch-mitte .etikett { color: var(--filz-muted); }
+.tisch-mitte .stapel-deckel { justify-content: center; }
+.platz { position: absolute; transform: translate(-50%, -50%); width: clamp(104px, 23%, 200px);
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px;
+  border-radius: 14px; background: rgba(0,0,0,.30); color: var(--filz-fg); border: 2px solid transparent;
+  transition: border-color .2s, opacity .2s; }
+.platz.dran { border-color: var(--accent); }
+.platz.raus { opacity: .45; }
+.platz-kopf { display: flex; gap: 8px; align-items: baseline; justify-content: space-between; width: 100%; }
+.platz .spieler-name { font-size: .95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.platz .zahl-deckel { font-size: 1.15rem; }
+.stapel-deckel.klein .deckel { width: 10px; height: 10px; border-width: 1.5px; }
+.becher-feld { display: flex; align-items: flex-end; gap: 6px; min-height: 58px; }
+.liegend { display: flex; flex-direction: column; gap: 2px; }
+.wurf-feld { position: relative; width: 76px; height: 56px; display: flex; align-items: flex-end; justify-content: center; }
+.wurf-wuerfel { display: flex; gap: 2px; align-items: flex-end; }
+.becher { position: absolute; left: 50%; bottom: 0; width: 46px; height: 54px; margin-left: -23px;
+  transition: transform var(--hub, 350ms) ease, opacity var(--hub, 350ms) ease; transform-origin: 50% 100%; }
+.becher svg { display: block; width: 100%; height: 100%; }
+.becher.bereit { transform: translate(34px, 4px) scale(.72); opacity: .9; }
+.becher.unten { transform: none; opacity: 1; }
+.becher.hoch { transform: translate(18px, -40px) rotate(18deg) scale(.8); opacity: .35; }
+.becher.schuettelt { animation: schuetteln var(--schuettel, 600ms) ease-in-out both; }
+@keyframes schuetteln {
+  0% { transform: translateY(-26px) rotate(0); }
+  15% { transform: translateY(-30px) rotate(-14deg); }
+  30% { transform: translateY(-22px) rotate(12deg); }
+  45% { transform: translateY(-30px) rotate(-12deg); }
+  60% { transform: translateY(-22px) rotate(10deg); }
+  80% { transform: translateY(-14px) rotate(-4deg); }
+  92% { transform: translateY(2px) scale(1.04, .94); }
+  100% { transform: none; }
+}
+.platz-status { font-size: .78rem; color: var(--filz-muted); text-align: center; min-height: 2.2em; line-height: 1.2; }
+.platz-status b { color: var(--filz-fg); }
+.platz .marken { justify-content: center; }
+.platz.bekommt { animation: puls 900ms ease; }
+@keyframes puls { 0%, 100% { box-shadow: none; } 40% { box-shadow: 0 0 0 4px var(--rot); } }
+@media (prefers-reduced-motion: reduce) {
+  .rollt, .becher.schuettelt, .platz.bekommt { animation: none; }
+  .becher { transition: none; }
+}

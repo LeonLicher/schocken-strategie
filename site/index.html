@@ -13,6 +13,8 @@
   <header class="kopf">
     <h1>Schocken am Tisch</h1>
     <div class="kopf-rechts">
+      <span class="etikett">Ansicht</span>
+      <div class="segment" id="ansicht" role="group" aria-label="Ansicht"></div>
       <span class="etikett">Tempo</span>
       <div class="segment" id="tempo" role="group" aria-label="Tempo"></div>
       <label class="schalter"><input type="checkbox" id="tipps-an"> Tipps</label>
@@ -44,6 +46,17 @@
       <div class="mitte"><span class="etikett">Mitte</span><span class="zahl-deckel" id="mitte-zahl">13</span><div class="stapel-deckel" id="mitte-deckel"></div></div>
     </div>
     <div class="spieler-raster" id="spieler"></div>
+  </section>
+
+  <section class="tisch-real" id="tisch-real" hidden aria-label="Tisch">
+    <div class="rund" id="rund">
+      <div class="tisch-mitte">
+        <span class="etikett" id="r-phase">Hälfte 1</span>
+        <div class="mitte"><span class="etikett">Mitte</span><span class="zahl-deckel" id="r-mitte-zahl">13</span></div>
+        <div class="stapel-deckel" id="r-mitte-deckel"></div>
+        <div class="regelzeile" id="r-regelzeile"></div>
+      </div>
+    </div>
   </section>
 
   <section class="aktion" id="aktion" hidden aria-live="polite">

@@ -78,6 +78,14 @@ Weil Stammtisch-Spieler nicht auf andere reagieren, ist das viel einfacher zu re
 |---|---|---|---|
 | 2 | **26,0 %** | 50 % | 26,2 % ± 0,9 % (10.000 Spiele) |
 | 3 | **14,0 %** | 33,3 % | 14,0 % ± 0,8 % (8.000 Spiele) |
+| 4 | **8,6 %** (Näherung) | 25 % | 8,6 % ± 1,4 % (1.600 Spiele) |
+| 5 | **6,3 %** (Näherung) | 20 % | 6,3 % ± 1,7 % (800 Spiele) |
+| 6 | **4,2 %** (Näherung) | 16,7 % | 4,2 % ± 1,8 % (500 Spiele) |
+
+Ab 4 Spielern ist Konter eine Näherung (`schocken/mehr.py`, `python werkzeuge/loese_mehr.py --spieler N`):
+Jede Runde wird exakt entschieden, spätere Runden werden so bewertet, als spiele man dort selbst wie der
+Stammtisch (im Finale exakter Konter). Zu dritt, wo es die exakte Lösung gibt, kommt die Näherung auf
+14,4 % ± 1,3 %, also praktisch gleich gut wie exakt (14,0 %).
 
 Was Konter zu zweit anders macht (Startspieler, Spielbeginn; `python werkzeuge/analyse_konter.py --spieler 2`):
 - **Schock (1-1-x) im 1. oder 2. Wurf nicht stehen lassen**, sondern die Einsen halten und weiter auf

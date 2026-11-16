@@ -21,6 +21,8 @@ Gegner:
 
 ### Online-Version (GitHub Pages)
 
+**https://leonlicher.github.io/schocken-strategie/** — mit Ansicht „Am Tisch“ (Becher, Würfeln, Bierdeckel).
+
 `site/` ist dasselbe Spiel komplett im Browser (JavaScript, ohne Server). Bei jedem Push nach `main` prüft
 eine GitHub Action, dass die Browser-Version exakt wie Python rechnet (`node tests/js/vergleich.mjs`,
 `node tests/js/spiel.mjs`), und veröffentlicht die Seite. Nach neuen Lösungen die Daten aktualisieren:

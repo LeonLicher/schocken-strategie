@@ -6,7 +6,7 @@ import { KonterNaeherung, Stammtischwerte } from "./mehr.js";
 
 const BOT_NAMEN = { stammtisch: "Stammtisch", konter: "Konter", optimal: "Optimal", faustregel: "Faustregel" };
 const BERATER_NAMEN = { optimal: "Optimal (alle spielen perfekt)", konter: "Konter (Gegner spielen Stammtisch)" };
-const TEMPO = [["langsam", "Langsam", 1.6], ["normal", "Normal", 1], ["schnell", "Schnell", 0.4], ["sofort", "Sofort", 0]];
+const TEMPO = [["langsam", "Langsam", 1.6], ["normal", "Normal", 1], ["schnell", "Schnell", 0.5], ["sofort", "Sofort", 0]];
 const pct = x => (x * 100).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " %";
 const $ = id => document.getElementById(id);
 
@@ -17,6 +17,14 @@ let anzahl = Number(lies("anzahl", "3"));
 let gegnerTypen = (() => { try { return JSON.parse(lies("gegner", "")); } catch (e) { return null; } })() ||
   ["konter", "stammtisch", "stammtisch", "stammtisch", "stammtisch"];
 let tempo = lies("tempo", "normal");
+let ansicht = lies("ansicht", "uebersicht");  // "uebersicht" (Standard) oder "tisch"
+const ANSICHTEN = [["uebersicht", "Übersicht"], ["tisch", "Am Tisch"]];
+
+// Wartezeiten je Ereignis in ms (bei Tempo "Normal"); am Tisch länger, damit Becher und Würfel zu sehen sind
+const ZEITEN = {
+  uebersicht: { wurf: 1000, aktion: 800, zug_ende: 400, runde_ende: 2400, runde_start: 400, haelfte_start: 1400, haelfte_ende: 2000 },
+  tisch: { wurf: 1800, aktion: 900, zug_ende: 500, runde_ende: 3200, runde_start: 600, haelfte_start: 1600, haelfte_ende: 2400 },
+};
 let tippsAn = lies("tipps", "1") === "1";
 
 // ------------------------------------------------------------------ Lösungsdaten
@@ -194,8 +202,8 @@ async function starte() {
   $("tipps-an").checked = tippsAn;
   neuerZustand(SITZUNG.namen, berater);
   $("einrichtung").hidden = true;
-  $("tisch").hidden = false;
   $("protokoll-box").hidden = false;
+  zeichne();
   SITZUNG.starte();
 }
 
@@ -237,7 +245,7 @@ function wende(e) {
       break;
     case "wurf":
       Z.amZug = e.spieler;
-      s[e.spieler].wuerfe.push({ nr: e.wurf_nr, gehalten: e.gehalten, neu: e.neu, verdeckt: e.verdeckt, text: "" });
+      s[e.spieler].wuerfe.push({ nr: e.wurf_nr, gehalten: e.gehalten, neu: e.neu, verdeckt: e.verdeckt, text: "", ereignis: Z.gespielt });
       break;
     case "aktion": {
       const w = s[e.spieler].wuerfe;
@@ -269,12 +277,15 @@ function wende(e) {
   }
 }
 
+const tempoFaktor = () => TEMPO.find(t => t[0] === tempo)[2];
 function pause(e) {
-  const f = TEMPO.find(t => t[0] === tempo)[2];
+  const f = tempoFaktor();
   if (f === 0) return 0;
   const eigen = e.spieler === 0 || (e.ergebnis && e.ergebnis.spieler === 0);
-  const basis = { wurf: 650, aktion: 500, zug_ende: 250, runde_ende: 1600, runde_start: 250, haelfte_start: 900, haelfte_ende: 1400 }[e.typ] || 0;
-  return (eigen && e.typ !== "runde_ende" ? 120 : basis) * f;
+  const basis = ZEITEN[ansicht][e.typ] || 0;
+  // eigene Züge: Würfel kurz kullern lassen, sonst nicht aufhalten
+  if (eigen && e.typ !== "runde_ende") return (e.typ === "wurf" ? (ansicht === "tisch" ? 1100 : 500) : 150) * f;
+  return basis * f;
 }
 
 let spielt = false;
@@ -285,8 +296,10 @@ async function spieleAb() {
     const e = SITZUNG.ereignisse[Z.gespielt];
     wende(e);
     Z.gespielt++;
-    zeichne();
     const ms = pause(e);
+    document.documentElement.style.setProperty("--roll", `${Math.max(250, Math.min(ms, 1400) * 0.55)}ms`);
+    zeichne();
+    if (ansicht === "tisch") animiereTisch(e, ms);
     if (ms) await new Promise(r => setTimeout(r, ms));
   }
   spielt = false;
@@ -296,6 +309,10 @@ async function spieleAb() {
 // ------------------------------------------------------------------ Zeichnen
 function zeichne() {
   if (!Z) return;
+  const amTisch = ansicht === "tisch";
+  $("tisch").hidden = amTisch;
+  $("tisch-real").hidden = !amTisch;
+  if (amTisch) zeichneTischReal();
   $("phase").textContent = Z.phase || "Gleich geht's los";
   $("mitte-zahl").textContent = Z.mitte;
   $("mitte-deckel").innerHTML = Array.from({ length: Z.mitte }, () => `<span class="deckel"></span>`).join("");
@@ -315,9 +332,14 @@ function zeichne() {
     if (s.haelften) marken.push(`<span class="marke">${s.haelften}× Hälfte verloren</span>`);
     if (!imSpiel && Z.phase) marken.push(`<span class="marke">nicht im Finale</span>`);
     else if (!aktiv && Z.reihe.length) marken.push(`<span class="marke">raus (keine Deckel)</span>`);
-    const wuerfe = s.wuerfe.map(w => `<div class="wurf-zeile"><span class="wurf-nr">${w.nr}.</span>
-        ${w.gehalten.length ? wuerfelReihe(w.gehalten, 20, "gehalten") : ""}${wuerfelReihe(w.verdeckt ? Array(3 - w.gehalten.length).fill(null) : w.neu, 20)}
-        <span class="wurf-text">${w.text}</span></div>`).join("");
+    const wuerfe = s.wuerfe.map(w => {
+      const frisch = w.ereignis === Z.gespielt - 1 && tempoFaktor() > 0;  // gerade geworfen: kullern lassen
+      const neu = w.verdeckt ? Array(3 - w.gehalten.length).fill(null) : w.neu;
+      const neuHtml = frisch ? `<span class="mini">${neu.map(v => `<span class="rollt">${wuerfelSVG(v, 20)}</span>`).join("")}</span>` : wuerfelReihe(neu, 20);
+      return `<div class="wurf-zeile"><span class="wurf-nr">${w.nr}.</span>
+        ${w.gehalten.length ? wuerfelReihe(w.gehalten, 20, "gehalten") : ""}${neuHtml}
+        <span class="wurf-text">${w.text}</span></div>`;
+    }).join("");
     let erg = "";
     if (s.ergebnis) {
       const e = s.ergebnis;
@@ -446,8 +468,153 @@ function zeichneEnde() {
   if (Z.fehler.length) box.innerHTML += `<p class="meldung">Fehler: ${Z.fehler.join("; ")}</p>`;
 }
 
+// ------------------------------------------------------------------ Ansicht "Am Tisch": Becher, Würfel, Bierdeckel
+// Umgedrehter Knobelbecher (Öffnung unten auf dem Tisch)
+const BECHER_SVG = `<svg viewBox="0 0 46 54" aria-hidden="true">
+  <path d="M10 4 H36 L42 50 H4 Z" fill="#6b3b22" stroke="#2c170b" stroke-width="1.5"/>
+  <path d="M10 5 H36" stroke="#a8683f" stroke-width="3"/>
+  <path d="M8 14 H38" stroke="#c99a6a" stroke-width="1" stroke-dasharray="2 2"/>
+  <path d="M5.4 41 H40.6" stroke="#c99a6a" stroke-width="1" stroke-dasharray="2 2"/>
+  <path d="M4 50 H42" stroke="#2c170b" stroke-width="3" stroke-linecap="round"/>
+</svg>`;
+
+function baueTischReal() {
+  const rund = $("rund");
+  rund.querySelectorAll(".platz").forEach(x => x.remove());
+  const schmal = window.matchMedia("(max-width: 640px)").matches;
+  Z.plaetze = Z.namen.map((name, i) => {
+    // Sitz 0 (du) unten, die anderen im Uhrzeigersinn
+    const winkel = Math.PI / 2 + i * 2 * Math.PI / Z.n;
+    const el = document.createElement("div");
+    el.className = "platz";
+    el.style.left = `${50 + (schmal ? 37 : 41) * Math.cos(winkel)}%`;
+    el.style.top = `${50 + (schmal ? 41 : 39) * Math.sin(winkel)}%`;
+    el.innerHTML = `<div class="platz-kopf"><span class="spieler-name">${name}</span><span class="zahl-deckel" title="Deckel">0</span></div>
+      <div class="stapel-deckel klein"></div>
+      <div class="becher-feld"><div class="liegend"></div><div class="wurf-feld"><div class="wurf-wuerfel"></div><div class="becher bereit">${BECHER_SVG}</div></div></div>
+      <div class="platz-status"></div><div class="marken"></div>`;
+    rund.appendChild(el);
+    return { el, becher: el.querySelector(".becher"), liegend: el.querySelector(".liegend"), wurf: el.querySelector(".wurf-wuerfel"),
+             status: el.querySelector(".platz-status"), zahl: el.querySelector(".zahl-deckel"), stapel: el.querySelector(".stapel-deckel"),
+             marken: el.querySelector(".marken"), timer: [] };
+  });
+  syncTischReal();
+}
+
+function setzeBecher(p, zustand) { p.becher.className = `becher ${zustand}`; }
+function stoppeTimer(p) { p.timer.forEach(clearTimeout); p.timer = []; }
+const liegendHtml = d => d.map(v => wuerfelSVG(v, 18, "gehalten")).join("");
+
+// Würfel und Becher ohne Animation auf den aktuellen Stand bringen
+function syncTischReal() {
+  Z.plaetze.forEach((p, i) => {
+    stoppeTimer(p);
+    const s = Z.spieler[i];
+    const w = s.wuerfe[s.wuerfe.length - 1];
+    if (s.ergebnis && s.ergebnis.wuerfel) {
+      p.liegend.innerHTML = ""; p.wurf.innerHTML = wuerfelReihe([...s.ergebnis.wuerfel].sort((a, b) => b - a), 22);
+      setzeBecher(p, "hoch");
+    } else if (w) {
+      p.liegend.innerHTML = liegendHtml(w.gehalten);
+      p.wurf.innerHTML = w.verdeckt ? "" : wuerfelReihe(w.neu, 22);
+      setzeBecher(p, w.verdeckt ? "unten" : "hoch");
+    } else {
+      p.liegend.innerHTML = ""; p.wurf.innerHTML = ""; setzeBecher(p, "bereit");
+    }
+  });
+}
+
+function zeichneTischReal() {
+  if (!Z.plaetze) baueTischReal();
+  $("r-phase").textContent = Z.phase || "Gleich geht's los";
+  $("r-mitte-zahl").textContent = Z.mitte;
+  $("r-mitte-deckel").innerHTML = Array.from({ length: Z.mitte }, () => `<span class="deckel"></span>`).join("");
+  const starterFertig = Z.reihe.length && Z.spieler[Z.reihe[0]].ergebnis;
+  $("r-regelzeile").innerHTML = Z.reihe.length
+    ? `Es beginnt <b>${Z.namen[Z.reihe[0]]}</b>.<br>` + (starterFertig ? `Höchstens <b>${Z.grenze}</b> ${Z.grenze === 1 ? "Wurf" : "Würfe"}${Z.vm ? ", der letzte <b>verdeckt</b>" : ""}.` : "Er legt die Wurfzahl fest.")
+    : "";
+  Z.plaetze.forEach((p, i) => {
+    const s = Z.spieler[i];
+    const imSpiel = Z.teilnehmer.includes(i), aktiv = Z.reihe.includes(i);
+    p.el.classList.toggle("dran", Z.amZug === i);
+    p.el.classList.toggle("raus", (!imSpiel && !!Z.phase) || (!aktiv && Z.reihe.length > 0));
+    p.zahl.textContent = s.deckel;
+    p.stapel.innerHTML = Array.from({ length: s.deckel }, () => `<span class="deckel"></span>`).join("");
+    const marken = [];
+    if (Z.reihe[0] === i) marken.push(`<span class="marke">beginnt</span>`);
+    if (s.marke === "hoch") marken.push(`<span class="marke hoch">hoch</span>`);
+    if (s.marke === "tief") marken.push(`<span class="marke tief">tief</span>`);
+    if (s.haelften) marken.push(`<span class="marke">${s.haelften}× verloren</span>`);
+    if (!imSpiel && Z.phase) marken.push(`<span class="marke">nicht im Finale</span>`);
+    p.marken.innerHTML = marken.join("");
+    const w = s.wuerfe[s.wuerfe.length - 1];
+    let status = "";
+    if (s.ergebnis) status = s.ergebnis.wertung ? `<b>${s.ergebnis.wertung}</b> · ${s.ergebnis.wuerfe} ${s.ergebnis.wuerfe === 1 ? "Wurf" : "Würfe"}${s.ergebnis.verdeckt ? " · war verdeckt" : ""}`
+                                                : `<b>verdeckt</b> nach ${s.ergebnis.wuerfe} ${s.ergebnis.wuerfe === 1 ? "Wurf" : "Würfen"}`;
+    else if (w) status = `${w.nr}. Wurf${w.text ? ": " + w.text : w.verdeckt ? ": verdeckt" : ""}`;
+    else if (s.vorText) status = s.vorText;
+    p.status.innerHTML = status;
+  });
+}
+
+// Animation zu einem Ereignis; ms = Zeit bis zum nächsten Ereignis
+function animiereTisch(e, ms) {
+  if (!Z.plaetze) return;
+  if (!ms) { syncTischReal(); return; }
+  const wurzel = document.documentElement.style;
+  switch (e.typ) {
+    case "runde_start":
+      Z.plaetze.forEach(p => { stoppeTimer(p); p.liegend.innerHTML = ""; p.wurf.innerHTML = ""; setzeBecher(p, "bereit"); });
+      break;
+    case "wurf": {
+      const p = Z.plaetze[e.spieler];
+      stoppeTimer(p);
+      p.liegend.innerHTML = liegendHtml(e.gehalten);
+      p.wurf.innerHTML = "";
+      wurzel.setProperty("--schuettel", `${Math.round(ms * 0.5)}ms`);
+      wurzel.setProperty("--hub", `${Math.round(Math.min(500, ms * 0.25))}ms`);
+      setzeBecher(p, "unten");
+      void p.becher.offsetWidth;  // Animation neu starten
+      p.becher.classList.add("schuettelt");
+      p.timer.push(setTimeout(() => {
+        p.becher.classList.remove("schuettelt");
+        if (e.verdeckt) return;  // Becher bleibt stehen: niemand sieht den Wurf
+        wurzel.setProperty("--roll", `${Math.round(ms * 0.4)}ms`);
+        p.wurf.innerHTML = e.neu.map(v => `<span class="rollt">${wuerfelSVG(v, 22)}</span>`).join("");
+        setzeBecher(p, "hoch");
+      }, ms * 0.5));
+      break;
+    }
+    case "runde_ende":
+      wurzel.setProperty("--hub", `${Math.round(Math.min(600, ms * 0.25))}ms`);
+      e.ergebnisse.forEach(r => {
+        const p = Z.plaetze[r.spieler];
+        stoppeTimer(p);
+        p.liegend.innerHTML = "";
+        p.wurf.innerHTML = wuerfelReihe([...r.wuerfel].sort((a, b) => b - a), 22);
+        setzeBecher(p, "hoch");  // alle Becher werden gelüftet
+      });
+      if (Z.plaetze[e.tief]) {
+        const el = Z.plaetze[e.tief].el;
+        el.classList.remove("bekommt"); void el.offsetWidth; el.classList.add("bekommt");
+      }
+      break;
+  }
+}
+
 // ------------------------------------------------------------------ Start
 (function () {
+  const segA = $("ansicht");
+  for (const [k, text] of ANSICHTEN) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = text; b.setAttribute("aria-pressed", String(k === ansicht));
+    b.onclick = () => {
+      ansicht = k; merke("ansicht", k);
+      segA.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+      if (Z) { Z.plaetze = null; zeichne(); }
+    };
+    segA.appendChild(b);
+  }
   const seg = $("tempo");
   for (const [k, text] of TEMPO) {
     const b = document.createElement("button");
