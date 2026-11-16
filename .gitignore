@@ -2,3 +2,4 @@
 __pycache__/
 *.pyc
 ergebnisse/*.csv
+ergebnisse/stammtischwerte*.pkl
