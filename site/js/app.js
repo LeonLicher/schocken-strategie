@@ -405,17 +405,20 @@ function zeichneAktion() {
     `<button class="knopf" type="button" data-t="${t}" aria-pressed="${Z.drehen === t}">${t === 1 ? "6-6 → eine 1" : "6-6-6 → zwei 1en"}</button>`).join("") : "";
   drehReihe.querySelectorAll("button").forEach(b => b.onclick = () => { const t = Number(b.dataset.t); Z.drehen = Z.drehen === t ? 0 : t; zeichneAktion(); });
   const weiter = rest > 0;
+  // Startspieler vor dem letzten (dritten) Wurf: verdeckt ist der Hauptknopf, offen nur die Nebenoption
+  const letzterStarter = weiter && o.ist_starter && rest === 1;
+  const hauptText = erzwungen ? "Würfeln (verdeckt, Pflicht)" : letzterStarter ? "Verdeckt würfeln" : "Würfeln";
   knoepfe.innerHTML = `<button class="knopf gross" type="button" id="k-fertig">Fertig (stehen lassen)</button>` +
-    (weiter ? `<button class="knopf haupt gross" type="button" id="k-weiter">${erzwungen ? "Würfeln (verdeckt, Pflicht)" : "Würfeln"}</button>` : "") +
-    (weiter && o.ist_starter ? `<button class="knopf gross" type="button" id="k-weiter-v">Verdeckt würfeln</button>` : "");
+    (weiter ? `<button class="knopf haupt gross" type="button" id="k-weiter">${hauptText}</button>` : "") +
+    (weiter && o.ist_starter ? `<button class="knopf gross" type="button" id="k-weiter-v">${letzterStarter ? "Offen würfeln" : "Verdeckt würfeln"}</button>` : "");
   $("k-fertig").onclick = () => sende({ stopp: true, behalten: [], drehen: 0, verdeckt: false });
   const auswahl = verdeckt => {
     const behalten = o.wuerfel.filter((v, i) => Z.auswahl[i] && !verbraucht.includes(i));
     if (behalten.length + Z.drehen > 2) { $("aktion-meldung").textContent = "Mindestens ein Würfel muss neu geworfen werden. Lass höchstens zwei liegen."; return; }
     sende({ stopp: false, behalten, drehen: Z.drehen, verdeckt });
   };
-  if (weiter) $("k-weiter").onclick = () => auswahl(erzwungen);
-  if (weiter && o.ist_starter) $("k-weiter-v").onclick = () => auswahl(true);
+  if (weiter) $("k-weiter").onclick = () => auswahl(erzwungen || letzterStarter);
+  if (weiter && o.ist_starter) $("k-weiter-v").onclick = () => auswahl(!letzterStarter);
   zeichneTipp();
 }
 
