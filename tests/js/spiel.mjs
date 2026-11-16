@@ -36,7 +36,8 @@ const besetzungen = [
 for (const n of Object.keys(werte).map(Number))
   besetzungen.push(() => [new KonterNaeherung(werte, L), ...Array.from({ length: n - 1 }, () => new Stammtisch())]);
 for (const b of besetzungen) {
-  for (let i = 0; i < 20; i++) {
+  const anzahlSpiele = b().length >= 5 ? 3 : 20;  // 5-6 Spieler mit Konter sind rechenintensiv: Funktionstest reicht
+  for (let i = 0; i < anzahlSpiele; i++) {
     try { await spieleSpiel(b(), rng(i + 1), log); } catch (e) { fehler++; console.log("Fehler:", e.message); }
   }
 }
@@ -45,7 +46,7 @@ for (const t of ["haelfteStart", "rundeStart", "wurf", "aktion", "zugEnde", "run
 }
 
 // 2) Konter gegen 2x Stammtisch: Verlustquote wie in Python (14,0 %)
-const n = 1500;
+const n = 400;  // genügt, um grobe Fehler zu erkennen; genaue Prüfung macht werkzeuge/pruefe_konter.py
 let verloren = 0;
 for (let i = 0; i < n; i++) {
   const e = await spieleSpiel([new Konter(L), new Stammtisch(), new Stammtisch()], rng(1000 + i), null, i % 3);
