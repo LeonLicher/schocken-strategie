@@ -19,14 +19,14 @@ export class Stammtisch {
   async entscheide(s) {
     if (s.phase === "vor_wurf") return { stopp: false, behalten: [], drehen: 0, verdeckt: false };
     const e = stammtischEntscheidung(s.wurfNr, s.wuerfel, s.neu, s.grenze, s.istStarter);
-    return e === null ? STOPP : { stopp: false, behalten: e[0], drehen: e[1], verdeckt: false };
+    return e === null ? STOPP : { stopp: false, behalten: e[0], drehen: e[1], verdeckt: s.istStarter && s.wurfNr === 2 };
   }
 }
 
 const vergleich = (r, wurf, pos) => [r, -wurf, -pos];
 const groesser = (a, b) => { for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i] > b[i]; return false; };
 
-export class Faustregel {  // Parameter (1, 0, 1, 0, 1)
+export class Faustregel {  // Parameter (1, 3, 1, 0, 1): Startspieler wirft den dritten Wurf verdeckt
   constructor() { this.name = "Faustregel"; }
   async entscheide(s) {
     if (s.phase === "vor_wurf") return { stopp: false, behalten: [], drehen: 0, verdeckt: false };
@@ -40,10 +40,10 @@ export class Faustregel {  // Parameter (1, 0, 1, 0, 1)
     }
     if (zufrieden) return STOPP;
     const einsen = Math.min(s.wuerfel.filter(x => x === 1).length, 2), sechsen = s.neu.filter(x => x === 6).length;
-    const rest = s.grenze - s.wurfNr;
-    if (einsen === 0 && sechsen >= 3 && rest >= 2) return { stopp: false, behalten: [], drehen: 2, verdeckt: false };
-    if (einsen < 2 && sechsen >= 2) return { stopp: false, behalten: Array(einsen).fill(1), drehen: 1, verdeckt: false };
-    return { stopp: false, behalten: Array(einsen).fill(1), drehen: 0, verdeckt: false };
+    const rest = s.grenze - s.wurfNr, verdeckt = s.istStarter && s.wurfNr === 2;
+    if (einsen === 0 && sechsen >= 3 && rest >= 2) return { stopp: false, behalten: [], drehen: 2, verdeckt };
+    if (einsen < 2 && sechsen >= 2) return { stopp: false, behalten: Array(einsen).fill(1), drehen: 1, verdeckt };
+    return { stopp: false, behalten: Array(einsen).fill(1), drehen: 0, verdeckt };
   }
 }
 

@@ -7,7 +7,7 @@ from .wertung import STRASSE, bewerte
 
 # Parameter-Indizes, identisch mit schocken/schnell.py
 STARTER_KLASSE, VERDECKT_WURF, FOLGER_KLASSE, FOLGER_MARGE, DREHEN = range(5)
-FAUSTREGEL_PARAMS = (1, 0, 1, 0, 1)
+FAUSTREGEL_PARAMS = (1, 3, 1, 0, 1)  # Startspieler wirft einen dritten Wurf verdeckt
 
 
 class Zufall(Strategie):
@@ -72,7 +72,7 @@ class ParameterStrategie(Strategie):
 class Faustregel(ParameterStrategie):
     """Einfache Kneipen-Strategie.
 
-    - Spielt immer offen.
+    - Startspieler wirft einen dritten Wurf verdeckt (wie am Tisch üblich), sonst offen.
     - Startspieler: hört ab einer Straße auf, sonst weiter.
     - Andere: hören auf, sobald sie besser als der schlechteste offene Wurf vor ihnen sind
       (ohne offenen Wurf vor ihnen: ab einer Straße).
@@ -92,7 +92,8 @@ def stammtisch_entscheidung(wurf_nr, wuerfel, neu, grenze, ist_starter):
     - Startspieler: ab dem 2. Wurf mit einer Eins aufhören; ohne Eins alle drei neu.
     - Alle anderen versuchen einen Schock zu bekommen: Einsen halten, Rest neu, bis der Schock da ist
       oder die Würfe aufgebraucht sind. Was die anderen haben, wird nicht beachtet.
-    - Sechsen werden gedreht, wenn erlaubt und weniger als zwei Einsen liegen. Verdeckt wird nie.
+    - Sechsen werden gedreht, wenn erlaubt und weniger als zwei Einsen liegen.
+    - Der Startspieler wirft einen dritten Wurf verdeckt (wie am Tisch üblich), sonst wird offen geworfen.
     """
     if bewerte(wuerfel, len(neu) == 3).klasse >= STRASSE:
         return None
@@ -119,7 +120,7 @@ class Stammtisch(Strategie):
         e = stammtisch_entscheidung(sicht.wurf_nr, sicht.wuerfel, sicht.neu, sicht.grenze, sicht.ist_starter)
         if e is None:
             return STOPP
-        return Aktion(behalten=e[0], drehen=e[1])
+        return Aktion(behalten=e[0], drehen=e[1], verdeckt=sicht.ist_starter and sicht.wurf_nr == 2)
 
 
 def aus_namen(name: str) -> Strategie:

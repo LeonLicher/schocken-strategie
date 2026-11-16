@@ -15,6 +15,7 @@ from pathlib import Path
 import numpy as np
 
 os.environ.setdefault("NUMBA_NUM_THREADS", "1")
+PROZESSE = int(os.environ.get("SCHOCKEN_PROZESSE", "2"))  # lokal schonend 2, in der Cloud mehr
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from schocken.bots import Stammtisch  # noqa: E402
@@ -49,8 +50,8 @@ def main():
     erwartet = lade_konter(a.spieler).p_verlust()
     for gegner in ("konter", "stammtisch"):
         t = time.time()
-        with Pool(2, initializer=_niedrig) as pool:
-            v = np.array(pool.map(lauf, [(a.spieler, 10 + k, a.spiele, gegner) for k in range(2)])).sum(0)
+        with Pool(PROZESSE, initializer=_niedrig) as pool:
+            v = np.array(pool.map(lauf, [(a.spieler, 10 + k, a.spiele, gegner) for k in range(PROZESSE)])).sum(0)
         n = v.sum()
         q = v[0] / n
         se = np.sqrt(q * (1 - q) / n)
