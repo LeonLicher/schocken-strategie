@@ -17,6 +17,8 @@ from schocken.engine import legale_aktionen, spiele_spiel  # noqa: E402
 from schocken.konter import F_FOLGER, S_START, Konter, datei as konter_datei, lade_konter  # noqa: E402
 from schocken.optimal import Optimal2, lade_loesung2  # noqa: E402
 from schocken.web.server import Berater  # noqa: E402
+from schocken.mehr import datei as werte_datei, lade_werte  # noqa: E402
+import numpy as np  # noqa: E402
 
 WURZEL = Path(__file__).resolve().parent.parent
 DATEN = WURZEL / "site" / "daten"
@@ -89,23 +91,41 @@ def testfaelle():
     for i in range(6):
         b = Berater("optimal")
         spiele_spiel([Aufzeichner(Optimal2(s2), b, faelle, "optimal"), Optimal2(s2)], rng, starter=i % 2)
-    for n in (2, 3):
-        if not konter_datei(n).exists():
+    for n in (2, 3, 4):
+        if not (konter_datei(n).exists() or werte_datei(n).exists()):
             continue
         b = Berater("konter")
-        for i in range(4):
+        for i in range(4 if n < 4 else 2):
             spieler = [Aufzeichner(Konter(), b, faelle, f"konter{n}")] + [Stammtisch() for _ in range(n - 1)]
             spiele_spiel(spieler, rng, starter=i % n)
     return faelle
 
 
+def export_stammtischwerte(n):
+    """V0-Werte als Float32 in derselben Reihenfolge, die site/js/mehr.js aufbaut."""
+    L = lade_werte(n)
+    werte = []
+    for phase in L.phasen():
+        for mitte in range(14):
+            for z in L.zustaende(mitte):
+                werte.append(L.V[phase][z])
+    return np.array(werte, dtype="<f4").tobytes()
+
+
 def main():
     DATEN.mkdir(parents=True, exist_ok=True)
     (DATEN / "loesung2.json").write_text(json.dumps(export_loesung2(), separators=(",", ":")), encoding="utf-8")
-    for n in (2, 3, 4):
+    index = {"konter": [], "stammtisch": []}
+    for n in (2, 3):
         if konter_datei(n).exists():
             (DATEN / f"konter{n}.json").write_text(json.dumps(export_konter(n), separators=(",", ":")), encoding="utf-8")
-    for f in sorted(DATEN.glob("*.json")):
+            index["konter"].append(n)
+    for n in (4, 5, 6):
+        if werte_datei(n).exists():
+            (DATEN / f"stammtisch{n}.bin").write_bytes(export_stammtischwerte(n))
+            index["stammtisch"].append(n)
+    (DATEN / "index.json").write_text(json.dumps(index), encoding="utf-8")
+    for f in sorted(DATEN.iterdir()):
         print(f"{f.name}: {f.stat().st_size // 1024} KB")
     FAELLE.parent.mkdir(parents=True, exist_ok=True)
     faelle = testfaelle()

@@ -41,7 +41,8 @@ def verfuegbar(n):
     if n == 2:
         bots += ["optimal"]
         berater += ["optimal"]
-    if konter_datei(n).exists():
+    from ..mehr import datei as werte_datei
+    if konter_datei(n).exists() or (n >= 4 and werte_datei(n).exists()):
         bots += ["konter"]
         berater += ["konter"]
     return {"bots": bots, "berater": berater}
@@ -161,7 +162,7 @@ class Sitzung:
                 strategien.append(Optimal2(lade_loesung2()))
             elif t == "konter":
                 for k in (2, self.n):
-                    if k not in loesungen:
+                    if k not in loesungen and konter_datei(k).exists():
                         loesungen[k] = lade_konter(k)
                 strategien.append(Konter(loesungen))
         self.namen = []

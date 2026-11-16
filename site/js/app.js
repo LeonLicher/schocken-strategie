@@ -1,7 +1,8 @@
 // Oberfläche: Einrichtung, Tisch, eigene Züge, Tipps. Das Spiel läuft komplett im Browser.
 import { spieleSpiel, legaleAktionen, gleicheAktion } from "./regeln.js";
 import { Spiel2 } from "./loeser.js";
-import { Stammtisch, Faustregel, Optimal2, Konter, KonterLoesung, optionen } from "./bots.js";
+import { Stammtisch, Faustregel, Optimal2, KonterLoesung, optionen } from "./bots.js";
+import { KonterNaeherung, Stammtischwerte } from "./mehr.js";
 
 const BOT_NAMEN = { stammtisch: "Stammtisch", konter: "Konter", optimal: "Optimal", faustregel: "Faustregel" };
 const BERATER_NAMEN = { optimal: "Optimal (alle spielen perfekt)", konter: "Konter (Gegner spielen Stammtisch)" };
@@ -19,22 +20,29 @@ let tempo = lies("tempo", "normal");
 let tippsAn = lies("tipps", "1") === "1";
 
 // ------------------------------------------------------------------ Lösungsdaten
-const DATEN = { spiel2: null, konter: {} };
+const DATEN = { spiel2: null, konter: {}, werte: {}, index: { konter: [], stammtisch: [] } };
 async function ladeDaten() {
   const json = async p => { const r = await fetch(p); if (!r.ok) throw new Error(p); return r.json(); };
+  DATEN.index = await json("daten/index.json");
   DATEN.spiel2 = new Spiel2(await json("daten/loesung2.json"));
-  DATEN.konter[2] = new KonterLoesung(await json("daten/konter2.json"));
-  for (const n of [3, 4]) {
-    try { DATEN.konter[n] = new KonterLoesung(await json(`daten/konter${n}.json`), DATEN.konter[2]); } catch (e) { /* nicht berechnet */ }
-  }
+  for (const n of DATEN.index.konter) DATEN.konter[n] = new KonterLoesung(await json(`daten/konter${n}.json`), DATEN.konter[2] || null);
+}
+
+// Werte für 4 bis 6 Spieler erst bei Bedarf laden (bis zu einige MB)
+async function ladeWerte(n) {
+  if (n < 4 || DATEN.werte[n] || !DATEN.index.stammtisch.includes(n)) return;
+  const r = await fetch(`daten/stammtisch${n}.bin`);
+  if (!r.ok) throw new Error(`daten/stammtisch${n}.bin`);
+  DATEN.werte[n] = new Stammtischwerte(n, new Float32Array(await r.arrayBuffer()), DATEN.konter[2]);
 }
 
 function verfuegbar(n) {
   const bots = ["stammtisch", "faustregel"], berater = [];
   if (n === 2) { bots.push("optimal"); berater.push("optimal"); }
-  if (DATEN.konter[n]) { bots.push("konter"); berater.push("konter"); }
+  if (DATEN.konter[n] || DATEN.index.stammtisch.includes(n)) { bots.push("konter"); berater.push("konter"); }
   return { bots, berater };
 }
+const neuerKonter = () => new KonterNaeherung(DATEN.werte, DATEN.konter);
 
 // ------------------------------------------------------------------ Texte
 function aktionText(a, phase, du = true) {
@@ -60,7 +68,7 @@ class Sitzung {
     this.ereignisse = [];
     this.offen = null;
     this.beendet = false;
-    this.berater = berater === "optimal" ? new Optimal2(DATEN.spiel2) : berater === "konter" ? new Konter(DATEN.konter) : null;
+    this.berater = berater === "optimal" ? new Optimal2(DATEN.spiel2) : berater === "konter" ? neuerKonter() : null;
     const sitzung = this;
     const langsam = bot => ({ name: bot.name, async entscheide(s) { await new Promise(r => setTimeout(r, 0)); return bot.entscheide(s); } });
     this.strategien = typen.map(t => {
@@ -68,7 +76,7 @@ class Sitzung {
       if (t === "stammtisch") return langsam(new Stammtisch());
       if (t === "faustregel") return langsam(new Faustregel());
       if (t === "optimal") return langsam(new Optimal2(DATEN.spiel2));
-      return langsam(new Konter(DATEN.konter));
+      return langsam(neuerKonter());
     });
     const zaehler = {};
     this.namen = typen.map(t => {
@@ -171,10 +179,15 @@ function zeichneEinrichtung() {
   if (v.berater.includes("konter") && gegnerTypen.slice(0, anzahl - 1).every(t => t === "stammtisch")) ber.value = "konter";
 }
 
-function starte() {
+async function starte() {
   const typen = ["mensch", ...gegnerTypen.slice(0, anzahl - 1)];
   const tipps = $("tipps-start").checked;
   const berater = tipps && !$("berater").disabled ? $("berater").value : null;
+  if (typen.includes("konter") || berater === "konter") {
+    $("start-meldung").textContent = "Lade Konter-Daten …";
+    try { await ladeWerte(anzahl); } catch (e) { $("start-meldung").textContent = "Konter-Daten fehlen: " + e.message; return; }
+    $("start-meldung").textContent = "";
+  }
   if (SITZUNG) SITZUNG.beendet = true;
   SITZUNG = new Sitzung(typen, berater);
   tippsAn = !!berater;

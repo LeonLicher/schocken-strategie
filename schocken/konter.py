@@ -431,6 +431,11 @@ class Konter(Strategie):
         """Zug-Tabellen für meine Entscheidung (Werte = -P(ich verliere))."""
         alle = [p for p, _ in sicht.deckel]
         n = len(alle)
+        if n >= 4:  # ab 4 Spielern: Näherung (jede Runde exakt, Zukunft wie Stammtisch)
+            if not hasattr(self, "_naeherung"):
+                from .mehr import KonterNaeherung
+                self._naeherung = KonterNaeherung(konter2=self._loesung(2))
+            return self._naeherung.tabellen(sicht)
         ich = sicht.spieler
         # Sitze relativ zu mir (ich = 0), im Uhrzeigersinn
         rel = {p: (alle.index(p) - alle.index(ich)) % n for p in alle}

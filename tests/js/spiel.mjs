@@ -6,12 +6,18 @@ import path from "node:path";
 import { spieleSpiel } from "../../site/js/regeln.js";
 import { Spiel2 } from "../../site/js/loeser.js";
 import { Stammtisch, Faustregel, Optimal2, Konter, KonterLoesung } from "../../site/js/bots.js";
+import { KonterNaeherung, Stammtischwerte } from "../../site/js/mehr.js";
 
 const hier = path.dirname(fileURLToPath(import.meta.url));
 const lies = p => JSON.parse(readFileSync(path.join(hier, "../../site/daten", p), "utf-8"));
 const spiel2 = new Spiel2(lies("loesung2.json"));
 const k2 = new KonterLoesung(lies("konter2.json"));
 const L = { 2: k2, 3: new KonterLoesung(lies("konter3.json"), k2) };
+const werte = {};
+for (const n of lies("index.json").stammtisch) {
+  const buf = readFileSync(path.join(hier, "../../site/daten", `stammtisch${n}.bin`));
+  werte[n] = new Stammtischwerte(n, new Float32Array(buf.buffer, buf.byteOffset, buf.length / 4), k2);
+}
 
 // kleiner deterministischer Zufallsgenerator (mulberry32)
 function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
@@ -27,6 +33,8 @@ const besetzungen = [
   () => [new Konter(L), new Faustregel(), new Stammtisch()],
   () => [new Stammtisch(), new Faustregel(), new Stammtisch(), new Faustregel(), new Stammtisch(), new Faustregel()],
 ];
+for (const n of Object.keys(werte).map(Number))
+  besetzungen.push(() => [new KonterNaeherung(werte, L), ...Array.from({ length: n - 1 }, () => new Stammtisch())]);
 for (const b of besetzungen) {
   for (let i = 0; i < 20; i++) {
     try { await spieleSpiel(b(), rng(i + 1), log); } catch (e) { fehler++; console.log("Fehler:", e.message); }
